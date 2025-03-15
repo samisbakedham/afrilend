@@ -1,30 +1,12 @@
-.App {
-  text-align: center;
-  font-family: Arial, sans-serif;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-header {
-  background-color: #4CAF50;
-  padding: 20px;
-  color: white;
-}
-nav {
-  margin-top: 10px;
-}
-nav a {
-  color: white;
-  margin: 0 10px;
-  text-decoration: none;
-}
-.loan-card {
-  border: 1px solid #ddd;
-  margin: 20px auto;
-  padding: 20px;
-  max-width: 400px;
-}
-button {
-  background-color: #4CAF50;
-  color: white;
-  padding: 10px;
-  border: none;
-  cursor: pointer;
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-in;
 }
