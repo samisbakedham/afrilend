@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../utils/supabaseClient';
 
 const loansData = [
   { id: 1, name: 'Amina', country: 'Kenya', amount: 300, purpose: 'Expand her shop', image: 'https://images.unsplash.com/photo-1590650516494-0c8e4c27e8b7', description: 'Amina runs a small shop in Nairobi and needs funds to stock more inventory.' },
@@ -12,16 +13,44 @@ function Loans() {
   const [amount, setAmount] = useState('');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e, name) => {
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
+
+  const handleSubmit = async (e, loan) => {
     e.preventDefault();
+    if (!user) {
+      alert('Please log in to support a loan.');
+      navigate('/login');
+      return;
+    }
     if (amount < 25) {
       alert('Minimum lending amount is $25');
       return;
     }
-    console.log(`Lending $${amount} to ${name} from ${email}`);
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    const { error } = await supabase.from('loan_supports').insert({
+      user_id: user.id,
+      loan_id: loan.id,
+      amount: parseInt(amount),
+      email,
+      status: 'pending',
+    });
+    if (error) {
+      console.error('Error supporting loan:', error.message);
+      alert('Failed to support loan. Please try again.');
+    } else {
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 3000);
+      setAmount('');
+      setEmail('');
+    }
   };
 
   if (id) {
@@ -38,36 +67,48 @@ function Loans() {
           <h3 className="text-2xl font-heading font-semibold text-afrilend-green">{loan.name} - {loan.country}</h3>
           <p className="text-gray-600 mt-2">{loan.description}</p>
           <p className="text-gray-600 mt-2">Needs ${loan.amount} to {loan.purpose}</p>
-          <form onSubmit={(e) => handleSubmit(e, loan.name)} className="mt-6">
-            <input
-              type="number"
-              placeholder="Enter amount to lend"
-              className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-afrilend-green"
-              min="25"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-            />
-            <input
-              type="email"
-              placeholder="Your email"
-              className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-afrilend-green"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <button
-              type="submit"
-              className="w-full bg-afrilend-green text-white py-3 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition"
-            >
-              Lend to {loan.name}
-            </button>
-          </form>
+          {!user ? (
+            <p className="mt-6 text-center">
+              <Link to="/login" className="text-afrilend-green hover:underline">Log in</Link> or{' '}
+              <Link to="/signup" className="text-afrilend-green hover:underline">sign up</Link> to support this loan.
+            </p>
+          ) : (
+            <form onSubmit={(e) => handleSubmit(e, loan)} className="mt-6">
+              <input
+                type="number"
+                placeholder="Enter amount to lend (min $25)"
+                className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-afrilend-green"
+                min="25"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Your email"
+                className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-afrilend-green"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <button
+                type="submit"
+                className="w-full bg-afrilend-green text-white py-3 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition"
+              >
+                Lend to {loan.name}
+              </button>
+            </form>
+          )}
           {submitted && (
             <p className="mt-4 text-afrilend-green text-center">
-              Thank you! Your support for {loan.name} has been recorded.
+              Thank you! Your support for {loan.name} has been recorded. Check your email for confirmation.
             </p>
           )}
+          <div className="mt-6 text-center">
+            <a href="mailto:support@afrilend.com" className="text-afrilend-green hover:underline">
+              Contact Support
+            </a>
+          </div>
         </div>
       </div>
     );
