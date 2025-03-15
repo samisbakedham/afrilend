@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Add useEffect import
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
@@ -28,7 +28,7 @@ function ApplyLoan() {
       navigate('/login');
       return;
     }
-    const { error } = await supabase.from('loans').insert({
+    const { error: loanError } = await supabase.from('loans').insert({
       name,
       country,
       amount: parseInt(amount),
@@ -38,14 +38,21 @@ function ApplyLoan() {
       status: 'pending',
       created_at: new Date(),
     });
-    if (error) {
-      console.error('Error applying for loan:', error.message);
+    if (loanError) {
+      console.error('Error applying for loan:', loanError.message);
       alert('Failed to apply for loan. Please try again.');
     } else {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ loan_application_status: 'submitted' })
+        .eq('id', user.id);
+      if (profileError) {
+        console.error('Error updating profile:', profileError.message);
+      }
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
-        navigate('/loans');
+        navigate('/profile');
       }, 3000);
     }
   };

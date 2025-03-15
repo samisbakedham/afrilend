@@ -5,6 +5,7 @@ import Loans from './components/Loans';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import ApplyLoan from './components/ApplyLoan';
+import Profile from './components/Profile';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
               <Link to="/loans" className="hover:text-afrilend-yellow transition">Browse Loans</Link>
               <Link to="/login" className="hover:text-afrilend-yellow transition">Login</Link>
               <Link to="/signup" className="hover:text-afrilend-yellow transition">Sign Up</Link>
+              <Link to="/profile" className="hover:text-afrilend-yellow transition">Profile</Link>
             </div>
           </div>
         </nav>
@@ -28,6 +30,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/apply-loan" element={<ApplyLoan />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </div>
     </Router>
