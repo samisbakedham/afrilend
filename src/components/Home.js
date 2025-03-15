@@ -1,36 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../utils/supabaseClient';
 
 function Home() {
-  const featuredLoans = [
-    {
-      id: 1,
-      name: 'Amina',
-      country: 'Kenya',
-      amount: 300,
-      purpose: 'Expand her shop',
-      image: 'https://images.unsplash.com/photo-1590650516494-0c8e4c27e8b7',
-      story: 'Amina, a 32-year-old entrepreneur from Nairobi, runs a small retail shop. With your support, she aims to expand her inventory to include more household goods, creating jobs for two additional local women.',
-    },
-    {
-      id: 2,
-      name: 'Kwame',
-      country: 'Ghana',
-      amount: 500,
-      purpose: 'Buy farming tools',
-      image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-      story: 'Kwame, a 45-year-old farmer from Accra, needs modern farming tools to increase his crop yield. This investment will help him feed 50 more families in his community sustainably.',
-    },
-    {
-      id: 3,
-      name: 'Fatima',
-      country: 'Nigeria',
-      amount: 400,
-      purpose: 'Start a bakery',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d8779911e1',
-      story: 'Fatima, a 28-year-old mother from Lagos, dreams of opening a bakery to provide fresh bread to her neighborhood. Your loan will help her purchase equipment and hire two assistants.',
-    },
-  ];
+  const [featuredLoans, setFeaturedLoans] = useState([]);
+
+  useEffect(() => {
+    const fetchFeaturedLoans = async () => {
+      const { data, error } = await supabase
+        .from('loans')
+        .select('*')
+        .eq('status', 'open')
+        .limit(3);
+      if (error) {
+        console.error('Error fetching featured loans:', error.message);
+      } else {
+        setFeaturedLoans(data);
+      }
+    };
+    fetchFeaturedLoans();
+  }, []);
 
   return (
     <div className="text-gray-800 font-body">
@@ -82,28 +71,32 @@ function Home() {
           <h2 className="text-4xl font-heading font-bold text-center mb-12 text-afrilend-green animate-fade-in">
             Meet the Entrepreneurs
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
-            {featuredLoans.map((loan, index) => (
-              <div
-                key={loan.id}
-                className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition duration-300 animate-fade-in"
-                style={{ animationDelay: `${0.2 * (index + 1)}s` }}
-              >
-                <img src={loan.image} alt={loan.name} className="w-full h-56 object-cover" />
-                <div className="p-6">
-                  <h3 className="text-xl font-heading font-semibold text-afrilend-green">{loan.name} - {loan.country}</h3>
-                  <p className="text-gray-600 mt-2">Needs ${loan.amount} to {loan.purpose}</p>
-                  <p className="text-sm text-gray-500 mt-2 italic">{loan.story}</p>
-                  <Link
-                    to={`/loans/${loan.id}`}
-                    className="mt-4 inline-block bg-afrilend-green text-white py-2 px-5 rounded hover:bg-afrilend-yellow hover:text-afrilend-green transition"
-                  >
-                    Support {loan.name}
-                  </Link>
+          {featuredLoans.length === 0 ? (
+            <p className="text-center text-gray-600">No featured loans available at the moment.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
+              {featuredLoans.map((loan, index) => (
+                <div
+                  key={loan.id}
+                  className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition duration-300 animate-fade-in"
+                  style={{ animationDelay: `${0.2 * (index + 1)}s` }}
+                >
+                  {loan.image && <img src={loan.image} alt={loan.name} className="w-full h-56 object-cover" />}
+                  <div className="p-6">
+                    <h3 className="text-xl font-heading font-semibold text-afrilend-green">{loan.name} - {loan.country}</h3>
+                    <p className="text-gray-600 mt-2">Needs ${loan.amount} to {loan.purpose}</p>
+                    <p className="text-sm text-gray-500 mt-2 italic">{loan.description}</p>
+                    <Link
+                      to={`/loans/${loan.id}`}
+                      className="mt-4 inline-block bg-afrilend-green text-white py-2 px-5 rounded hover:bg-afrilend-yellow hover:text-afrilend-green transition"
+                    >
+                      Support {loan.name}
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -138,10 +131,10 @@ function Home() {
           </h2>
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-lg text-gray-700 italic mb-4">
-              &quot;Lending through AfriLend was a life-changing experience. Seeing Amina grow her business brought me so much joy!&quot; - Jane D., USA
+              "Lending through AfriLend was a life-changing experience. Seeing Amina grow her business brought me so much joy!" - Jane D., USA
             </p>
             <p className="text-lg text-gray-700 italic">
-              &quot;I love how easy it is to support entrepreneurs like Kwame. The impact is real!&quot; - Mark T., Canada
+              "I love how easy it is to support entrepreneurs like Kwame. The impact is real!" - Mark T., Canada
             </p>
           </div>
         </div>

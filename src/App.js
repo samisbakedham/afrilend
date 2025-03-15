@@ -4,6 +4,7 @@ import Home from './components/Home';
 import Loans from './components/Loans';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import ApplyLoan from './components/ApplyLoan';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/loans" element={<Loans />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/apply-loan" element={<ApplyLoan />} />
         </Routes>
       </div>
     </Router>
