@@ -25,6 +25,8 @@ function App() {
           <Route path="/apply-loan" element={<ApplyLoan />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/users" element={<Users />} />
         </Routes>
       </div>
     </Router>

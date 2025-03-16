@@ -15,13 +15,12 @@ function Profile() {
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawalAmount, setWithdrawalAmount] = useState('');
   const [totalFunded, setTotalFunded] = useState(0);
-  const [lendingHistory, setLendingHistory] = useState([]); // State for real lending history
+  const [lendingHistory, setLendingHistory] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
-  // Fetch user data
   useEffect(() => {
     console.log('Profile.js: useEffect triggered for user data');
     const getUserData = async () => {
@@ -86,10 +85,9 @@ function Profile() {
             setTotalFunded(total);
             console.log('Total funded:', total);
 
-            // Format lending history for the chart
             const history = supports.map(support => ({
               date: new Date(support.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-              amount: support.amount,
+              amount: support.amount / 100, // Convert to dollars
             }));
             setLendingHistory(history);
             console.log('Lending history:', history);
@@ -147,7 +145,6 @@ function Profile() {
     getUserData();
   }, [navigate]);
 
-  // Handle payment success redirect
   useEffect(() => {
     console.log('Profile.js: useEffect triggered for redirect handling');
     const urlParams = new URLSearchParams(window.location.search);
@@ -401,7 +398,7 @@ function Profile() {
                       />
                     )}
                     <div>
-                      <h3 className="text-xl font-semibold text-kiva-text">Welcome, Lender!</h3>
+                      <h3 className="text-xl font-semibold text-kiva-text">Welcome, {profile.name || 'Lender'}!</h3>
                       {profile.bio && <p className="text-sm text-gray-600 mt-1">{profile.bio}</p>}
                     </div>
                   </div>
@@ -442,7 +439,7 @@ function Profile() {
               />
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h3 className="text-lg font-medium text-kiva-text mb-4">Manage Funds</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[200px]">
                   <form className="space-y-4">
                     <input
                       type="number"
@@ -495,6 +492,18 @@ function Profile() {
                 className="w-full mt-6 bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
               >
                 Fund a Loan
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="w-full mt-4 bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+              >
+                View Dashboard
+              </button>
+              <button
+                onClick={() => navigate('/users')}
+                className="w-full mt-2 bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+              >
+                View Community
               </button>
             </div>
           ) : profile.role === 'borrower' ? (
