@@ -65,7 +65,7 @@ function Profile() {
             return;
           }
           setWallet(walletData || { balance: 0 });
-          console.log('Wallet data:', walletData);
+          console.log('Wallet data fetched:', walletData);
 
           console.log('Fetching loan supports for total funded...');
           const { data: supports, error: supportError } = await supabase
@@ -132,6 +132,24 @@ function Profile() {
       }
     };
     getUserData();
+
+    // Handle payment success redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const successParam = urlParams.get('success');
+    const errorParam = urlParams.get('error');
+    useEffect(() => {
+      console.log('Checking redirect parameters:', { successParam, errorParam });
+      if (successParam === 'true') {
+        console.log('Payment succeeded via redirect, calling handlePaymentSuccess');
+        handlePaymentSuccess();
+      } else if (errorParam) {
+        console.error('Payment error from redirect:', errorParam);
+        setError(errorParam);
+      } else if (urlParams.get('cancelled') === 'true') {
+        console.log('Payment cancelled via redirect');
+        setError('Payment was cancelled.');
+      }
+    }, [successParam, errorParam]); // Dependency on URL params
   }, [navigate]);
 
   const handleDeposit = async () => {
@@ -216,24 +234,39 @@ function Profile() {
   };
 
   const handlePaymentSuccess = async () => {
-    const amount = parseFloat(depositAmount);
+    const amount = parseFloat(depositAmount) || 0; // Default to 0 if not set
+    console.log('handlePaymentSuccess called with amount:', amount);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('wallets')
-        .update({ balance: (wallet.balance || 0) + amount })
-        .eq('id', user.id);
+        .select('balance')
+        .eq('id', user.id)
+        .single();
       if (error) {
-        console.error('Error updating wallet balance:', error.message);
+        console.error('Error fetching current wallet balance:', error.message);
+        setError('Failed to fetch wallet balance.');
+        return;
+      }
+      const newBalance = (data.balance || 0) + amount;
+      console.log('Updating wallet balance from', data.balance, 'to', newBalance);
+
+      const { error: updateError } = await supabase
+        .from('wallets')
+        .update({ balance: newBalance })
+        .eq('id', user.id);
+      if (updateError) {
+        console.error('Error updating wallet balance:', updateError.message);
         setError('Failed to update wallet balance after payment.');
         return;
       }
-      setWallet({ ...wallet, balance: (wallet.balance || 0) + amount });
+      setWallet({ ...wallet, balance: newBalance });
       setDepositAmount('');
       setSuccess('Deposit successful!');
       setTimeout(() => setSuccess(''), 3000);
+      console.log('Wallet balance updated successfully to:', newBalance);
     } catch (err) {
-      console.error('Error in handlePaymentSuccess:', err.message);
-      setError('An error occurred while updating the wallet.');
+      console.error('Error in handlePaymentSuccess:', err.message, err.stack);
+      setError('An unexpected error occurred while updating the wallet.');
     }
   };
 
