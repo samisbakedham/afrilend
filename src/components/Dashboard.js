@@ -2,6 +2,7 @@ import React, { useEffect, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
+import { supabase } from '../utils/supabaseClient';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { supabase } from '../utils/supabaseClient';
 import LendingHistory from './LendingHistory';
-import Dashboard from './Dashboard';
 import ProfileSettings from './ProfileSettings';
 
 function Profile() {
@@ -21,6 +20,7 @@ function Profile() {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
+  // Fetch user data
   useEffect(() => {
     console.log('Profile.js: useEffect triggered for user data');
     const getUserData = async () => {
@@ -44,7 +44,7 @@ function Profile() {
         console.log('Fetching profile data...');
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('role, loan_application_status, total_loans_funded, borrowers_impacted, profile_picture, bio')
+          .select('role, loan_application_status, total_loans_funded, borrowers_impacted, profile_picture, bio, name')
           .eq('id', user.id)
           .single();
         if (profileError) {
@@ -87,7 +87,7 @@ function Profile() {
 
             const history = supports.map(support => ({
               date: new Date(support.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-              amount: support.amount / 100, // Convert to dollars
+              amount: support.amount / 100,
             }));
             setLendingHistory(history);
             console.log('Lending history:', history);
@@ -145,6 +145,7 @@ function Profile() {
     getUserData();
   }, [navigate]);
 
+  // Handle payment success redirect
   useEffect(() => {
     console.log('Profile.js: useEffect triggered for redirect handling');
     const urlParams = new URLSearchParams(window.location.search);
@@ -377,6 +378,7 @@ function Profile() {
 
   console.log('Rendering Profile with state:', { user, profile, wallet, loans, error, loading, success, depositAmount });
 
+  // Updated return statement with fixes for button visibility and navigation
   if (error) return <p className="container mx-auto py-16 text-center text-red-600">{error}</p>;
   if (!user) return <p className="container mx-auto py-16 text-center">Please log in to view your profile.</p>;
 
@@ -426,12 +428,6 @@ function Profile() {
                   </div>
                 </div>
               </div>
-              <Dashboard
-                totalFunded={totalFunded}
-                totalLoansFunded={profile.total_loans_funded || 0}
-                borrowersImpacted={profile.borrowers_impacted || 0}
-                lendingHistory={lendingHistory}
-              />
               <ProfileSettings
                 userId={user.id}
                 profile={profile}
@@ -439,7 +435,7 @@ function Profile() {
               />
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h3 className="text-lg font-medium text-kiva-text mb-4">Manage Funds</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[200px]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[200px] overflow-visible">
                   <form className="space-y-4">
                     <input
                       type="number"
@@ -487,24 +483,26 @@ function Profile() {
                 <h3 className="text-lg font-medium text-kiva-text mb-4">Lending History</h3>
                 <LendingHistory userId={user.id} />
               </div>
-              <button
-                onClick={() => navigate('/loans')}
-                className="w-full mt-6 bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
-              >
-                Fund a Loan
-              </button>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="w-full mt-4 bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
-              >
-                View Dashboard
-              </button>
-              <button
-                onClick={() => navigate('/users')}
-                className="w-full mt-2 bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
-              >
-                View Community
-              </button>
+              <div className="space-y-4">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+                >
+                  View Dashboard
+                </button>
+                <button
+                  onClick={() => navigate('/users')}
+                  className="w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+                >
+                  View Community
+                </button>
+                <button
+                  onClick={() => navigate('/loans')}
+                  className="w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+                >
+                  Fund a Loan
+                </button>
+              </div>
             </div>
           ) : profile.role === 'borrower' ? (
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl p-6 border border-gray-200 transform hover:scale-105 transition duration-300">
