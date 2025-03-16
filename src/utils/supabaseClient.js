@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const supabase = createClient(process.env.REACT_APP_SUPABASE_URL, process.env.REACT_APP_SUPABASE_ANON_KEY);
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export { supabase, stripePromise };
