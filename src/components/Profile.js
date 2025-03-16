@@ -15,6 +15,7 @@ function Profile() {
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawalAmount, setWithdrawalAmount] = useState('');
   const [totalFunded, setTotalFunded] = useState(0);
+  const [lendingHistory, setLendingHistory] = useState([]); // State for real lending history
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -70,19 +71,28 @@ function Profile() {
           setWallet(walletData || { balance: 0 });
           console.log('Wallet data fetched:', walletData);
 
-          console.log('Fetching loan supports for total funded...');
+          console.log('Fetching loan supports for total funded and lending history...');
           const { data: supports, error: supportError } = await supabase
             .from('loan_supports')
-            .select('amount')
+            .select('amount, created_at')
             .eq('user_id', user.id)
             .eq('status', 'pending');
           if (supportError) {
             console.error('Error fetching loan supports:', supportError.message);
             setTotalFunded(0);
+            setLendingHistory([]);
           } else {
             const total = supports ? supports.reduce((sum, support) => sum + support.amount, 0) : 0;
             setTotalFunded(total);
             console.log('Total funded:', total);
+
+            // Format lending history for the chart
+            const history = supports.map(support => ({
+              date: new Date(support.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              amount: support.amount,
+            }));
+            setLendingHistory(history);
+            console.log('Lending history:', history);
           }
         } else if (profileData?.role === 'borrower') {
           console.log('Fetching borrower email data...');
@@ -214,7 +224,7 @@ function Profile() {
         return;
       }
       setLoading(false);
-      navigate('/checkout', { state: { sessionId: data.sessionId, amount } }); // Pass amount in state
+      navigate('/checkout', { state: { sessionId: data.sessionId, amount } });
     } catch (err) {
       console.error('Error in handleDeposit:', err.message, err.stack);
       setError(`An error occurred while initiating the payment: ${err.message}`);
@@ -423,10 +433,7 @@ function Profile() {
                 totalFunded={totalFunded}
                 totalLoansFunded={profile.total_loans_funded || 0}
                 borrowersImpacted={profile.borrowers_impacted || 0}
-                lendingHistory={[
-                  { date: '3/15/2025', amount: 25 },
-                  { date: '3/16/2025', amount: 100 }, // Updated with different dates
-                ]}
+                lendingHistory={lendingHistory}
               />
               <ProfileSettings
                 userId={user.id}
