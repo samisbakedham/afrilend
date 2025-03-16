@@ -16,19 +16,23 @@ const allowedOrigins = [
 serve(async (req) => {
   // Get the origin from the request headers
   const origin = req.headers.get('Origin') || '';
-  
+  console.log('Request Origin:', origin);
+
   // Determine if the origin is allowed
-  const corsOrigin = allowedOrigins.includes(origin) ? origin : null;
+  const corsOrigin = allowedOrigins.includes(origin) ? origin : '';
+  console.log('CORS Origin Set To:', corsOrigin);
 
   // Set CORS headers
   const headers = new Headers({
-    'Access-Control-Allow-Origin': corsOrigin || '', // Only allow whitelisted origins
+    'Access-Control-Allow-Origin': corsOrigin, // Dynamically set the allowed origin
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400', // Cache preflight response for 24 hours
   });
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
     return new Response(null, { status: 204, headers });
   }
 
