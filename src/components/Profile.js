@@ -151,6 +151,8 @@ function Profile() {
     } else if (urlParams.get('cancelled') === 'true') {
       console.log('Payment cancelled via redirect');
       setError('Payment was cancelled.');
+    } else {
+      console.log('No redirect parameters detected');
     }
   }, []); // Empty dependency array to run once on mount
 
@@ -237,39 +239,44 @@ function Profile() {
 
   const handlePaymentSuccess = async () => {
     const amount = parseFloat(depositAmount) || 0; // Default to 0 if not set
-    console.log('handlePaymentSuccess called with amount:', amount);
+    console.log('handlePaymentSuccess called with amount:', amount, 'and user_id:', localStorage.getItem('user_id'));
     try {
-      const { data, error } = await supabase
+      // Fetch the current wallet balance
+      const { data, error: fetchError } = await supabase
         .from('wallets')
         .select('balance')
-        .eq('id', localStorage.getItem('user_id')) // Use localStorage user_id
+        .eq('id', localStorage.getItem('user_id'))
         .single();
-      if (error) {
-        console.error('Error fetching current wallet balance:', error.message);
-        setError('Failed to fetch wallet balance.');
+      if (fetchError) {
+        console.error('Error fetching current wallet balance:', fetchError.message, fetchError);
+        setError('Failed to fetch wallet balance: ' + fetchError.message);
         return;
       }
-      const newBalance = (data.balance || 0) + amount;
-      console.log('Updating wallet balance from', data.balance, 'to', newBalance);
+      console.log('Current wallet data:', data);
+      const currentBalance = data.balance || 0;
+      const newBalance = currentBalance + amount;
+      console.log('Updating wallet balance from', currentBalance, 'to', newBalance);
 
-      const { error: updateError } = await supabase
+      // Update the wallet balance
+      const { error: updateError, data: updatedData } = await supabase
         .from('wallets')
         .update({ balance: newBalance })
-        .eq('id', localStorage.getItem('user_id')) // Use localStorage user_id
-        .single(); // Ensure single record update
+        .eq('id', localStorage.getItem('user_id'))
+        .single();
       if (updateError) {
-        console.error('Error updating wallet balance:', updateError.message);
-        setError('Failed to update wallet balance after payment.');
+        console.error('Error updating wallet balance:', updateError.message, updateError);
+        setError('Failed to update wallet balance: ' + updateError.message);
         return;
       }
-      setWallet({ ...wallet, balance: newBalance });
+      console.log('Wallet updated data:', updatedData);
+      setWallet({ ...wallet, balance: newBalance }); // Force state update
       setDepositAmount('');
       setSuccess('Deposit successful!');
       setTimeout(() => setSuccess(''), 3000);
       console.log('Wallet balance updated successfully to:', newBalance);
     } catch (err) {
       console.error('Error in handlePaymentSuccess:', err.message, err.stack);
-      setError('An unexpected error occurred while updating the wallet.');
+      setError('An unexpected error occurred while updating the wallet: ' + err.message);
     }
   };
 
