@@ -142,9 +142,12 @@ function Profile() {
     console.log('URL Search Params:', Object.fromEntries(urlParams));
     const successParam = urlParams.get('success');
     const errorParam = urlParams.get('error');
+    const amountParam = urlParams.get('amount'); // Extract amount from redirect if possible
     if (successParam === 'true') {
-      console.log('Payment succeeded via redirect, calling handlePaymentSuccess');
-      handlePaymentSuccess();
+      const depositAmount = parseFloat(amountParam) || parseFloat(localStorage.getItem('lastDepositAmount')) || 0;
+      console.log('Payment succeeded via redirect, calling handlePaymentSuccess with amount:', depositAmount);
+      localStorage.setItem('lastDepositAmount', depositAmount.toString()); // Store for next use
+      handlePaymentSuccess(depositAmount);
     } else if (errorParam) {
       console.error('Payment error from redirect:', errorParam);
       setError(errorParam);
@@ -170,7 +173,8 @@ function Profile() {
       console.log('Starting handleDeposit with user:', user?.id, 'and amount:', amount);
       const requestBody = { user_id: localStorage.getItem('user_id'), amount: amount * 100 };
       console.log('Request body:', requestBody);
-      
+      localStorage.setItem('lastDepositAmount', amount.toString()); // Store the deposit amount
+
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
         console.error('Session error:', sessionError?.message || 'No session found');
@@ -237,8 +241,7 @@ function Profile() {
     setLoading(false);
   };
 
-  const handlePaymentSuccess = async () => {
-    const amount = parseFloat(depositAmount) || 0; // Default to 0 if not set
+  const handlePaymentSuccess = async (amount) => {
     console.log('handlePaymentSuccess called with amount:', amount, 'and user_id:', localStorage.getItem('user_id'));
     try {
       // Fetch the current wallet balance
@@ -269,11 +272,23 @@ function Profile() {
         return;
       }
       console.log('Wallet updated data:', updatedData);
-      setWallet({ ...wallet, balance: newBalance }); // Force state update
-      setDepositAmount('');
+      setWallet(prev => ({ ...prev, balance: newBalance })); // Force state update with prev state
       setSuccess('Deposit successful!');
       setTimeout(() => setSuccess(''), 3000);
       console.log('Wallet balance updated successfully to:', newBalance);
+
+      // Re-fetch wallet data to ensure consistency
+      const { data: refreshedWalletData, error: refreshError } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('id', localStorage.getItem('user_id'))
+        .single();
+      if (refreshError) {
+        console.error('Error refreshing wallet data:', refreshError.message);
+      } else {
+        setWallet(refreshedWalletData);
+        console.log('Refreshed wallet data:', refreshedWalletData);
+      }
     } catch (err) {
       console.error('Error in handlePaymentSuccess:', err.message, err.stack);
       setError('An unexpected error occurred while updating the wallet: ' + err.message);
