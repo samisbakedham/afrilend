@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, stripePromise } from '../utils/supabaseClient';
 import LendingHistory from './LendingHistory';
-import { Elements } from '@stripe/react-stripe-js';
+import { Elements, useStripe, useElements } from '@stripe/react-stripe-js';
 import CheckoutForm from './CheckoutForm';
 
 function Profile() {
@@ -17,6 +17,7 @@ function Profile() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
+  const [clientSecret, setClientSecret] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,7 +72,7 @@ function Profile() {
             .eq('status', 'pending');
           if (supportError) {
             console.error('Error fetching loan supports:', supportError.message);
-            setTotalFunded(0); // Fallback to 0 if fetch fails
+            setTotalFunded(0);
           } else {
             const total = supports ? supports.reduce((sum, support) => sum + support.amount, 0) : 0;
             setTotalFunded(total);
@@ -113,7 +114,7 @@ function Profile() {
               .eq('status', 'pending');
             if (supportError) {
               console.error('Error fetching loan supports for borrower:', supportError.message);
-              fundedData[loan.id] = 0; // Fallback to 0 if fetch fails
+              fundedData[loan.id] = 0;
               continue;
             }
             const totalFunded = supports ? supports.reduce((sum, support) => sum + support.amount, 0) : 0;
@@ -133,26 +134,53 @@ function Profile() {
   const handleDeposit = async () => {
     setLoading(true);
     setError(null);
-    const stripe = await stripePromise;
-    const { error: sessionError, data: session } = await supabase.rpc('create_stripe_session', {
-      p_user_id: user.id,
-      p_amount: parseFloat(depositAmount) * 100, // Convert to cents
-    });
-    if (sessionError) {
-      console.error('Session creation error:', sessionError.message);
-      setError('Failed to create payment session.');
+    const amount = parseFloat(depositAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setError('Please enter a valid positive amount.');
       setLoading(false);
       return;
     }
+    try {
+      console.log('Creating Stripe Payment Intent with user:', user.id, 'and amount:', amount);
+      const requestBody = { user_id: user.id, amount: amount * 100 };
+      console.log('Request body being sent:', requestBody);
+      
+      // Get the current session to ensure we have a valid access token
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        console.error('Session error:', sessionError?.message || 'No session found');
+        setError('Please log in again to continue.');
+        setLoading(false);
+        return;
+      }
+      const accessToken = sessionData.session.access_token;
+      console.log('Access token:', accessToken);
 
-    const result = await stripe.redirectToCheckout({
-      sessionId: session.session_id,
-    });
-    if (result.error) {
-      console.error('Stripe checkout error:', result.error.message);
-      setError('Payment failed. Please try again.');
+      const response = await fetch('https://iqransnptrzuixvlhbvn.supabase.co/functions/v1/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+      console.log('Edge Function Response Status:', response.status, response.statusText);
+      const data = await response.json();
+      console.log('Edge Function Response Data:', data);
+      if (!response.ok || !data.client_secret) {
+        const errorMessage = data.error || 'No client_secret returned';
+        console.error('Payment Intent error:', errorMessage);
+        setError(`Failed to create payment intent: ${errorMessage}`);
+        setLoading(false);
+        return;
+      }
+      setClientSecret(data.client_secret);
+      console.log('Client secret set:', data.client_secret);
+    } catch (err) {
+      console.error('Error in handleDeposit:', err.message, err.stack);
+      setError('An error occurred while initiating the payment: ' + err.message);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleWithdrawal = async (e) => {
@@ -167,7 +195,7 @@ function Profile() {
     if (window.confirm(`Confirm withdrawing $${amount}?`)) {
       const { error } = await supabase.rpc('create_stripe_withdrawal', {
         p_user_id: user.id,
-        p_amount: amount * 100, // Convert to cents
+        p_amount: amount * 100,
       });
       if (error) {
         console.error('Withdrawal error:', error.message);
@@ -182,7 +210,30 @@ function Profile() {
     setLoading(false);
   };
 
-  console.log('Rendering Profile with state:', { user, profile, wallet, loans, error, loading, success });
+  const handlePaymentSuccess = async () => {
+    const amount = parseFloat(depositAmount);
+    try {
+      const { error } = await supabase
+        .from('wallets')
+        .update({ balance: (wallet.balance || 0) + amount })
+        .eq('id', user.id);
+      if (error) {
+        console.error('Error updating wallet balance:', error.message);
+        setError('Failed to update wallet balance after payment.');
+        return;
+      }
+      setWallet({ ...wallet, balance: (wallet.balance || 0) + amount });
+      setDepositAmount('');
+      setClientSecret(null);
+      setSuccess('Deposit successful!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error in handlePaymentSuccess:', err.message);
+      setError('An error occurred while updating the wallet.');
+    }
+  };
+
+  console.log('Rendering Profile with state:', { user, profile, wallet, loans, error, loading, success, clientSecret });
 
   if (error) return <p className="container mx-auto py-16 text-center text-red-600">{error}</p>;
   if (!user) return <p className="container mx-auto py-16 text-center">Please log in to view your profile.</p>;
@@ -202,9 +253,38 @@ function Profile() {
                 <p className="text-lg text-gray-800">Total Funded: <span className="font-bold text-xl">${totalFunded.toFixed(2)}</span></p>
               </div>
               <div className="space-y-6">
-                <Elements stripe={stripePromise}>
-                  <CheckoutForm amount={depositAmount} setAmount={setDepositAmount} onDeposit={handleDeposit} loading={loading} />
-                </Elements>
+                {clientSecret ? (
+                  <Elements stripe={stripePromise} options={{ clientSecret }}>
+                    <CheckoutForm
+                      amount={depositAmount}
+                      setAmount={setDepositAmount}
+                      onDeposit={handlePaymentSuccess}
+                      loading={loading}
+                    />
+                  </Elements>
+                ) : (
+                  <form className="space-y-4">
+                    <input
+                      type="number"
+                      placeholder="Deposit amount"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-afrilend-green"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      min="1"
+                      step="0.01"
+                      disabled={loading}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={handleDeposit}
+                      className={`w-full bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={loading}
+                    >
+                      {loading ? 'Processing...' : 'Deposit'}
+                    </button>
+                  </form>
+                )}
                 <form onSubmit={handleWithdrawal} className="space-y-4">
                   <input
                     type="number"
