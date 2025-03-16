@@ -378,7 +378,6 @@ function Profile() {
 
   console.log('Rendering Profile with state:', { user, profile, wallet, loans, error, loading, success, depositAmount });
 
-  // Updated return statement with fixes for button visibility and navigation
   if (error) return <p className="container mx-auto py-16 text-center text-red-600">{error}</p>;
   if (!user) return <p className="container mx-auto py-16 text-center">Please log in to view your profile.</p>;
 
@@ -435,7 +434,7 @@ function Profile() {
               />
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h3 className="text-lg font-medium text-kiva-text mb-4">Manage Funds</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[200px] overflow-visible">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px] overflow-auto">
                   <form className="space-y-4">
                     <input
                       type="number"
@@ -456,6 +455,8 @@ function Profile() {
                     >
                       {loading ? 'Processing...' : 'Deposit'}
                     </button>
+                    {/* Debugging placeholder */}
+                    <div className="text-red-600">Debug: Deposit Form Rendered</div>
                   </form>
                   <form onSubmit={handleWithdrawal} className="space-y-4">
                     <input
@@ -476,6 +477,8 @@ function Profile() {
                     >
                       {loading ? 'Processing...' : 'Withdraw'}
                     </button>
+                    {/* Debugging placeholder */}
+                    <div className="text-red-600">Debug: Withdraw Form Rendered</div>
                   </form>
                 </div>
               </div>
