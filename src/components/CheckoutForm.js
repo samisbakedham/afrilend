@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
+import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 
 // Utility function to delay execution (for rate limiting)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -27,12 +27,17 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       let attempt = 0;
       while (attempt <= retryCount && attempt < maxRetries && !success) {
         try {
-          const { error, paymentIntent } = await stripe.confirmPayment({
-            elements,
-            confirmParams: {
-              return_url: 'http://localhost:3000/profile',
-            },
-          });
+          const { error, paymentIntent } = await stripe.confirmCardPayment(
+            window.localStorage.getItem('clientSecret'), // Retrieve clientSecret from localStorage
+            {
+              payment_method: {
+                card: elements.getElement(CardElement),
+                billing_details: {
+                  email: 'test@example.com',
+                },
+              },
+            }
+          );
 
           if (error) {
             console.error('Payment error:', error.message, error.code, error.type);
@@ -56,7 +61,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
             setErrorMessage('Payment did not succeed. Please try again.');
           }
         } catch (err) {
-          console.error('Unexpected error in confirmPayment:', err.message, err.stack);
+          console.error('Unexpected error in confirmCardPayment:', err.message, err.stack);
           if (err.message.includes('429') || err.message.includes('too many requests')) {
             console.log(`Rate limit hit, retrying (${attempt + 1}/${maxRetries})...`);
             setRetryCount(attempt + 1);
@@ -82,7 +87,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement />
+      <CardElement />
       <button
         type="submit"
         className={`w-full bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}

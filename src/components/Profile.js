@@ -176,6 +176,7 @@ function Profile() {
         return;
       }
       setClientSecret(data.client_secret);
+      window.localStorage.setItem('clientSecret', data.client_secret); // Store clientSecret in localStorage
       console.log('Client secret set:', data.client_secret);
     } catch (err) {
       console.error('Error in handleDeposit:', err.message, err.stack);
@@ -226,6 +227,7 @@ function Profile() {
       setWallet({ ...wallet, balance: (wallet.balance || 0) + amount });
       setDepositAmount('');
       setClientSecret(null);
+      window.localStorage.removeItem('clientSecret'); // Clear clientSecret from localStorage
       setSuccess('Deposit successful!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
