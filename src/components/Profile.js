@@ -161,7 +161,7 @@ function Profile() {
       console.log('Access token:', accessToken);
 
       console.log('Sending fetch request to Edge Function');
-      const response = await fetch('https://iqransnptrzuixvlhbvn.supabase.co/functions/v1/create-payment-intent-v2', {
+      const response = await fetch('https://iqransnptrzuixvlhbvn.supabase.co/functions/v1/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,15 +172,15 @@ function Profile() {
       console.log('Edge Function Response Status:', response.status, response.statusText);
       const data = await response.json();
       console.log('Edge Function Response Data:', data);
-      if (!response.ok || !data.client_secret) {
-        const errorMessage = data.error || 'No client_secret returned';
-        console.error('Payment Intent error:', errorMessage);
-        setError(`Failed to create payment intent: ${errorMessage}`);
+      if (!response.ok || !data.sessionId) {
+        const errorMessage = data.error || 'No sessionId returned';
+        console.error('Checkout Session error:', errorMessage);
+        setError(`Failed to create checkout session: ${errorMessage}`);
         setLoading(false);
         return;
       }
       setLoading(false); // Set loading to false after fetch
-      navigate('/checkout', { state: { clientSecret: data.client_secret } }); // Pass only clientSecret
+      navigate('/checkout', { state: { sessionId: data.sessionId } }); // Pass sessionId
     } catch (err) {
       console.error('Error in handleDeposit:', err.message, err.stack);
       setError(`An error occurred while initiating the payment: ${err.message.includes('CORS') ? 'CORS policy violation - please check server configuration' : err.message}`);

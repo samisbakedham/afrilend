@@ -7,12 +7,12 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 function CheckoutPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { clientSecret } = state || {};
+  const { sessionId } = state || {};
 
   useEffect(() => {
     const handleCheckout = async () => {
-      if (!clientSecret) {
-        navigate('/profile', { state: { error: 'No client secret provided.' } });
+      if (!sessionId) {
+        navigate('/profile', { state: { error: 'No session ID provided.' } });
         return;
       }
 
@@ -22,13 +22,9 @@ function CheckoutPage() {
         return;
       }
 
-      console.log('Initiating Stripe Checkout with client secret:', clientSecret);
+      console.log('Initiating Stripe Checkout with session ID:', sessionId);
       const { error } = await stripe.redirectToCheckout({
-        mode: 'payment',
-        successUrl: 'https://afrilend.vercel.app/profile?success=true',
-        cancelUrl: 'https://afrilend.vercel.app/profile?cancelled=true',
-        clientReferenceId: localStorage.getItem('user_id'),
-        paymentIntentClientSecret: clientSecret,
+        sessionId: sessionId,
       });
 
       if (error) {
@@ -38,7 +34,7 @@ function CheckoutPage() {
     };
 
     handleCheckout();
-  }, [clientSecret, navigate]);
+  }, [sessionId, navigate]);
 
   return (
     <div className="container mx-auto py-16 text-center">
