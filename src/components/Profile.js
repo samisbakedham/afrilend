@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
+import LendingHistory from './LendingHistory';
 
 function Profile() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [wallet, setWallet] = useState(null);
   const [loans, setLoans] = useState([]);
+  const [depositAmount, setDepositAmount] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -20,7 +22,6 @@ function Profile() {
         return;
       }
       setUser(user);
-      console.log('Logged in user:', user);
 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -33,7 +34,6 @@ function Profile() {
         return;
       }
       setProfile(profileData);
-      console.log('Profile data:', profileData);
 
       if (profileData?.role === 'lender') {
         const { data: walletData, error: walletError } = await supabase
@@ -47,34 +47,40 @@ function Profile() {
           return;
         }
         setWallet(walletData);
-        console.log('Wallet data:', walletData);
       } else if (profileData?.role === 'borrower') {
-        const { data: emailData, error: emailError } = await supabase
+        const { data: emailData } = await supabase
           .from('profiles')
           .select('email')
           .eq('id', user.id)
           .single();
-        if (emailError) {
-          console.error('Error fetching email:', emailError.message);
-          setError('Failed to load borrower email.');
-          return;
-        }
-        const { data: loansData, error: loansError } = await supabase
+        const { data: loansData } = await supabase
           .from('loans')
           .select('*')
           .eq('name', emailData.email.split('@')[0])
           .eq('status', 'pending');
-        if (loansError) {
-          console.error('Error fetching loans:', loansError.message);
-          setError('Failed to load loan requests.');
-          return;
-        }
-        setLoans(loansData);
-        console.log('Loans data:', loansData);
+        setLoans(loansData || []);
       }
     };
     getUserData();
   }, [navigate]);
+
+  const handleDeposit = async (e) => {
+    e.preventDefault();
+    const amount = parseFloat(depositAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setError('Please enter a valid amount.');
+      return;
+    }
+    const { error } = await supabase.rpc('deposit_to_wallet', { p_user_id: user.id, p_amount: amount });
+    if (error) {
+      console.error('Deposit error:', error.message);
+      setError('Failed to deposit. Please try again.');
+    } else {
+      setWallet({ ...wallet, balance: wallet.balance + amount });
+      setDepositAmount('');
+      setError(null);
+    }
+  };
 
   if (error) return <p className="container mx-auto py-16 text-center text-red-600">{error}</p>;
   if (!user) return <p className="container mx-auto py-16 text-center">Please log in to view your profile.</p>;
@@ -84,22 +90,37 @@ function Profile() {
       <h2 className="text-4xl font-heading font-bold text-afrilend-green mb-8 text-center">My Profile</h2>
       {profile ? (
         <>
-          {profile.role === 'lender' ? (
-            wallet ? (
-              <div className="max-w-md mx-auto bg-afrilend-gray rounded-lg shadow-lg p-6">
-                <h3 className="text-2xl font-heading font-semibold text-afrilend-green">Lender Dashboard</h3>
-                <p className="text-gray-600 mt-2">Wallet Balance: ${wallet.balance}</p>
+          {profile.role === 'lender' && wallet ? (
+            <div className="max-w-md mx-auto bg-afrilend-gray rounded-lg shadow-lg p-6">
+              <h3 className="text-2xl font-heading font-semibold text-afrilend-green">Lender Dashboard</h3>
+              <p className="text-gray-600 mt-2">Wallet Balance: ${wallet.balance.toFixed(2)}</p>
+              <form onSubmit={handleDeposit} className="mt-4">
+                <input
+                  type="number"
+                  placeholder="Deposit amount"
+                  className="w-full p-3 border rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-afrilend-green"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  min="1"
+                  step="0.01"
+                  required
+                />
                 <button
-                  onClick={() => navigate('/loans')}
-                  className="mt-4 bg-afrilend-green text-white py-2 px-4 rounded hover:bg-afrilend-yellow hover:text-afrilend-green transition"
+                  type="submit"
+                  className="w-full bg-afrilend-green text-white py-2 px-4 rounded hover:bg-afrilend-yellow hover:text-afrilend-green transition"
                 >
-                  Fund a Loan
+                  Deposit
                 </button>
-              </div>
-            ) : (
-              <p className="text-center text-red-600">Wallet data not found. Please contact support.</p>
-            )
-          ) : (
+              </form>
+              <LendingHistory userId={user.id} />
+              <button
+                onClick={() => navigate('/loans')}
+                className="mt-4 bg-afrilend-green text-white py-2 px-4 rounded hover:bg-afrilend-yellow hover:text-afrilend-green transition"
+              >
+                Fund a Loan
+              </button>
+            </div>
+          ) : profile.role === 'borrower' ? (
             <div className="max-w-md mx-auto bg-afrilend-gray rounded-lg shadow-lg p-6">
               <h3 className="text-2xl font-heading font-semibold text-afrilend-green">Borrower Dashboard</h3>
               <p className="text-gray-600 mt-2">Application Status: {profile.loan_application_status || 'Not applied'}</p>
@@ -124,6 +145,8 @@ function Profile() {
                 Apply for a Loan
               </button>
             </div>
+          ) : (
+            <p className="text-center">Loading profile...</p>
           )}
         </>
       ) : (
