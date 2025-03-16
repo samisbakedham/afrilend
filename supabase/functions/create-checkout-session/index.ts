@@ -1,8 +1,8 @@
-import { serve } from 'https://deno.land/std@0.131.0/http/server.ts';
-import Stripe from 'https://esm.sh/stripe@13.7.0';
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'; // Updated to latest stable version
+import Stripe from 'https://esm.sh/stripe@latest'; // Updated to latest version
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
-  apiVersion: '2022-11-15',
+  apiVersion: '2023-10-16', // Updated to latest stable API version
 });
 
 console.log('Starting create-checkout-session function...');
