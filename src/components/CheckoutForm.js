@@ -28,7 +28,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       while (attempt <= retryCount && attempt < maxRetries && !success) {
         try {
           const { error, paymentIntent } = await stripe.confirmCardPayment(
-            window.localStorage.getItem('clientSecret'), // Retrieve clientSecret from localStorage
+            window.localStorage.getItem('clientSecret'),
             {
               payment_method: {
                 card: elements.getElement(CardElement),
@@ -36,6 +36,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
                   email: 'test@example.com',
                 },
               },
+              return_url: 'https://afrilend.vercel.app/profile', // Update to your Vercel domain
             }
           );
 
