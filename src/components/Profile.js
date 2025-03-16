@@ -18,8 +18,9 @@ function Profile() {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
+  // Fetch user data
   useEffect(() => {
-    console.log('Profile.js: useEffect triggered');
+    console.log('Profile.js: useEffect triggered for user data');
     const getUserData = async () => {
       try {
         console.log('Fetching user data...');
@@ -132,25 +133,26 @@ function Profile() {
       }
     };
     getUserData();
+  }, [navigate]);
 
-    // Handle payment success redirect
+  // Handle payment success redirect (separate useEffect at top level)
+  useEffect(() => {
+    console.log('Profile.js: useEffect triggered for redirect handling');
     const urlParams = new URLSearchParams(window.location.search);
+    console.log('URL Search Params:', Object.fromEntries(urlParams));
     const successParam = urlParams.get('success');
     const errorParam = urlParams.get('error');
-    useEffect(() => {
-      console.log('Checking redirect parameters:', { successParam, errorParam });
-      if (successParam === 'true') {
-        console.log('Payment succeeded via redirect, calling handlePaymentSuccess');
-        handlePaymentSuccess();
-      } else if (errorParam) {
-        console.error('Payment error from redirect:', errorParam);
-        setError(errorParam);
-      } else if (urlParams.get('cancelled') === 'true') {
-        console.log('Payment cancelled via redirect');
-        setError('Payment was cancelled.');
-      }
-    }, [successParam, errorParam]); // Dependency on URL params
-  }, [navigate]);
+    if (successParam === 'true') {
+      console.log('Payment succeeded via redirect, calling handlePaymentSuccess');
+      handlePaymentSuccess();
+    } else if (errorParam) {
+      console.error('Payment error from redirect:', errorParam);
+      setError(errorParam);
+    } else if (urlParams.get('cancelled') === 'true') {
+      console.log('Payment cancelled via redirect');
+      setError('Payment was cancelled.');
+    }
+  }, []); // Empty dependency array to run once on mount
 
   const handleDeposit = async () => {
     if (loading) return; // Prevent multiple submissions
@@ -163,7 +165,7 @@ function Profile() {
       return;
     }
     try {
-      console.log('Starting handleDeposit with user:', user.id, 'and amount:', amount);
+      console.log('Starting handleDeposit with user:', user?.id, 'and amount:', amount);
       const requestBody = { user_id: localStorage.getItem('user_id'), amount: amount * 100 };
       console.log('Request body:', requestBody);
       
@@ -240,7 +242,7 @@ function Profile() {
       const { data, error } = await supabase
         .from('wallets')
         .select('balance')
-        .eq('id', user.id)
+        .eq('id', localStorage.getItem('user_id')) // Use localStorage user_id
         .single();
       if (error) {
         console.error('Error fetching current wallet balance:', error.message);
@@ -253,7 +255,8 @@ function Profile() {
       const { error: updateError } = await supabase
         .from('wallets')
         .update({ balance: newBalance })
-        .eq('id', user.id);
+        .eq('id', localStorage.getItem('user_id')) // Use localStorage user_id
+        .single(); // Ensure single record update
       if (updateError) {
         console.error('Error updating wallet balance:', updateError.message);
         setError('Failed to update wallet balance after payment.');
