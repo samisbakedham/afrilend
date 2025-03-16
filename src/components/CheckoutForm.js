@@ -68,18 +68,28 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
             break;
           case 'requires_action':
             console.log('Requires action:', paymentIntent);
-            const { error: actionError } = await stripe.handleCardAction(paymentIntent.client_secret);
+            const { error: actionError, paymentIntent: confirmedIntent } = await stripe.handleCardAction(
+              paymentIntent.client_secret
+            );
             if (actionError) {
               console.error('Action error:', actionError.message, actionError);
               setErrorMessage(actionError.message);
+            } else if (confirmedIntent.status === 'succeeded') {
+              console.log('Payment succeeded after action:', confirmedIntent);
+              onDeposit();
+              setErrorMessage(null);
             } else {
-              console.log('Action handled, confirming again:', paymentIntent);
-              // Retry confirmCardPayment if needed (optional, depending on use case)
+              console.error('Payment did not succeed after action:', confirmedIntent);
+              setErrorMessage(`Payment status: ${confirmedIntent.status}. Please try again.`);
             }
             break;
           case 'requires_payment_method':
             console.error('Requires payment method:', paymentIntent);
             setErrorMessage('Payment method not attached. Please try again.');
+            break;
+          case 'processing':
+            console.error('Payment is processing:', paymentIntent);
+            setErrorMessage('Payment is being processed. Please wait or try again later.');
             break;
           default:
             console.error('Payment did not succeed:', paymentIntent.status, paymentIntent);
