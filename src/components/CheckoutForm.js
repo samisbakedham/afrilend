@@ -43,17 +43,20 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       console.log('Card element retrieved');
 
       console.log('Confirming card payment with client secret:', clientSecret);
-      const { error, paymentIntent } = await Promise.race([
-        stripe.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              email: 'test@example.com', // Replace with dynamic user email if needed
-            },
+      const confirmPromise = stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            email: 'test@example.com', // Replace with dynamic user email if needed
           },
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Payment timed out after 10 seconds')), 10000)),
-      ]);
+        },
+      });
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Payment timed out after 10 seconds')), 10000);
+      });
+
+      const { error, paymentIntent } = await Promise.race([confirmPromise, timeoutPromise]);
 
       if (error) {
         console.error('Payment error:', error.message, error.code, error.type, error);
@@ -88,7 +91,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
             setErrorMessage('Payment method not attached. Please try again.');
             break;
           case 'processing':
-            console.error('Payment is processing:', paymentIntent);
+            console.warn('Payment is processing:', paymentIntent);
             setErrorMessage('Payment is being processed. Please wait or try again later.');
             break;
           default:
