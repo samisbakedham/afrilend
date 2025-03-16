@@ -9,6 +9,8 @@ import ApplyLoan from './components/ApplyLoan';
 import Profile from './components/Profile';
 import Nav from './components/Nav';
 import CheckoutPage from './components/CheckoutPage';
+import Dashboard from './components/Dashboard';
+import Users from './components/Users';
 
 function App() {
   return (
