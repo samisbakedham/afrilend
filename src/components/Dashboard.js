@@ -1,4 +1,4 @@
-import React, { useEffect, memo } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
@@ -6,10 +6,80 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScal
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
-const Dashboard = ({ totalFunded, totalLoansFunded, borrowersImpacted, lendingHistory }) => {
-  const navigate = useNavigate(); // Add useNavigate hook
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const [totalFunded, setTotalFunded] = useState(0);
+  const [totalLoansFunded, setTotalLoansFunded] = useState(0);
+  const [borrowersImpacted, setBorrowersImpacted] = useState(0);
+  const [lendingHistory, setLendingHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  console.log('Dashboard.js: Rendering with lendingHistory:', lendingHistory);
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const userId = localStorage.getItem('user_id');
+        if (!userId) {
+          setError('User not logged in.');
+          setLoading(false);
+          return;
+        }
+
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('total_loans_funded, borrowers_impacted')
+          .eq('id', userId)
+          .single();
+        if (profileError) {
+          console.error('Error fetching profile:', profileError.message);
+          setError('Failed to load profile data.');
+          setLoading(false);
+          return;
+        }
+        setTotalLoansFunded(profileData.total_loans_funded || 0);
+        setBorrowersImpacted(profileData.borrowers_impacted || 0);
+
+        const { data: walletData, error: walletError } = await supabase
+          .from('wallets')
+          .select('balance')
+          .eq('id', userId)
+          .single();
+        if (walletError) {
+          console.error('Error fetching wallet:', walletError.message);
+          setError('Failed to load wallet data.');
+          setLoading(false);
+          return;
+        }
+        // Use wallet balance as total funded for simplicity (adjust as needed)
+        setTotalFunded(walletData.balance || 0);
+
+        const { data: supports, error: supportError } = await supabase
+          .from('loan_supports')
+          .select('amount, created_at')
+          .eq('user_id', userId)
+          .eq('status', 'pending');
+        if (supportError) {
+          console.error('Error fetching loan supports:', supportError.message);
+          setLendingHistory([]);
+        } else {
+          const history = supports.map(support => ({
+            date: new Date(support.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            amount: support.amount / 100,
+          }));
+          setLendingHistory(history);
+        }
+      } catch (err) {
+        console.error('Unexpected error in fetchDashboardData:', err.message);
+        setError('An unexpected error occurred.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  if (loading) return <p className="text-center">Loading dashboard...</p>;
+  if (error) return <p className="text-center text-red-600">{error}</p>;
 
   const uniqueLendingHistory = lendingHistory.reduce((acc, curr) => {
     if (!acc.find(item => item.date === curr.date)) acc.push(curr);
