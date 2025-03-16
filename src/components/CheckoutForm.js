@@ -11,32 +11,40 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
     if (!stripe || !elements) {
       setErrorMessage('Stripe has not loaded yet.');
       setLoading(false);
+      console.error('Stripe or elements not loaded');
       return;
     }
 
     try {
       console.log('Submitting payment with Stripe...');
-      console.log('Client Secret from localStorage:', window.localStorage.getItem('clientSecret'));
-      setLoading(true);
+      const clientSecret = window.localStorage.getItem('clientSecret');
+      console.log('Client Secret from localStorage:', clientSecret);
 
+      if (!clientSecret) {
+        setErrorMessage('Client secret not found in localStorage.');
+        setLoading(false);
+        console.error('No client secret available');
+        return;
+      }
+
+      setLoading(true);
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
         setErrorMessage('Card element not found.');
         setLoading(false);
+        console.error('Card element not initialized');
         return;
       }
 
-      const { error, paymentIntent } = await stripe.confirmCardPayment(
-        window.localStorage.getItem('clientSecret'),
-        {
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              email: 'test@example.com', // Replace with dynamic user email if needed
-            },
+      console.log('Confirming card payment with client secret:', clientSecret);
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            email: 'test@example.com', // Replace with dynamic user email if needed
           },
-        }
-      );
+        },
+      });
 
       if (error) {
         console.error('Payment error:', error.message, error.code, error.type, error);
@@ -46,7 +54,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
         onDeposit();
         setErrorMessage(null);
       } else {
-        console.error('Payment did not succeed:', paymentIntent);
+        console.error('Payment did not succeed:', paymentIntent?.status, paymentIntent);
         setErrorMessage(`Payment status: ${paymentIntent?.status || 'unknown'}. Please try again.`);
       }
     } catch (err) {
