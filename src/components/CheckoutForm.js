@@ -39,7 +39,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       );
 
       if (error) {
-        console.error('Payment error:', error.message, error.code, error.type);
+        console.error('Payment error:', error.message, error.code, error.type, error);
         setErrorMessage(error.message);
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         console.log('Payment succeeded:', paymentIntent);
