@@ -7,6 +7,7 @@ import Signup from './components/Signup';
 import ApplyLoan from './components/ApplyLoan';
 import Profile from './components/Profile';
 import Nav from './components/Nav';
+import CheckoutPage from './components/CheckoutPage';
 
 function App() {
   return (
