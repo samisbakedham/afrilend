@@ -14,27 +14,34 @@ const allowedOrigins = [
 ];
 
 serve(async (req) => {
+  // Get the origin from the request headers
   const origin = req.headers.get('Origin') || '';
   console.log('Request Origin:', origin);
 
-  // Set CORS headers based on origin
+  // Determine if the origin is allowed
+  const corsOrigin = allowedOrigins.includes(origin) ? origin : '';
+  console.log('CORS Origin Set To:', corsOrigin);
+
+  // Set CORS headers
   const headers = new Headers({
-    'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : 'https://afrilend.vercel.app', // Default to Vercel if not matched
+    'Access-Control-Allow-Origin': corsOrigin, // Dynamically set the allowed origin
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Max-Age': '86400', // Cache preflight for 24 hours
+    'Access-Control-Max-Age': '86400', // Cache preflight response for 24 hours
   });
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS request with origin:', origin);
+    console.log('Handling OPTIONS request');
     return new Response(null, { status: 204, headers });
   }
 
   try {
+    // Check if the request has a body
     const bodyText = await req.text();
     console.log('Raw request body:', bodyText);
 
+    // Validate Content-Type
     const contentType = req.headers.get('Content-Type');
     console.log('Content-Type:', contentType);
     if (!contentType || !contentType.includes('application/json')) {
@@ -45,6 +52,7 @@ serve(async (req) => {
       });
     }
 
+    // Parse JSON body
     let body;
     try {
       body = JSON.parse(bodyText);
@@ -59,6 +67,7 @@ serve(async (req) => {
     const { user_id, amount } = body;
     console.log('Parsed request body:', { user_id, amount });
 
+    // Validate inputs
     if (!user_id || !amount || amount <= 0) {
       console.error('Invalid input:', { user_id, amount });
       return new Response(JSON.stringify({ error: 'Invalid user_id or amount' }), {
@@ -67,6 +76,7 @@ serve(async (req) => {
       });
     }
 
+    // Create Payment Intent with only 'card' payment method
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
       currency: 'usd',
