@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
 
@@ -6,6 +7,8 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScal
 ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const Dashboard = ({ totalFunded, totalLoansFunded, borrowersImpacted, lendingHistory }) => {
+  const navigate = useNavigate(); // Add useNavigate hook
+
   console.log('Dashboard.js: Rendering with lendingHistory:', lendingHistory);
 
   const uniqueLendingHistory = lendingHistory.reduce((acc, curr) => {
@@ -110,4 +113,5 @@ const Dashboard = ({ totalFunded, totalLoansFunded, borrowersImpacted, lendingHi
   );
 };
 
-export default Dashboard;
+// Memoize the Dashboard component
+export default memo(Dashboard);
