@@ -7,7 +7,7 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 function CheckoutPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { clientSecret, amount } = state || {};
+  const { clientSecret } = state || {};
 
   useEffect(() => {
     const handleCheckout = async () => {
@@ -25,8 +25,6 @@ function CheckoutPage() {
       console.log('Initiating Stripe Checkout with client secret:', clientSecret);
       const { error } = await stripe.redirectToCheckout({
         mode: 'payment',
-        amount: amount,
-        currency: 'usd',
         successUrl: 'https://afrilend.vercel.app/profile?success=true',
         cancelUrl: 'https://afrilend.vercel.app/profile?cancelled=true',
         clientReferenceId: localStorage.getItem('user_id'),
@@ -40,7 +38,7 @@ function CheckoutPage() {
     };
 
     handleCheckout();
-  }, [clientSecret, amount, navigate]);
+  }, [clientSecret, navigate]);
 
   return (
     <div className="container mx-auto py-16 text-center">

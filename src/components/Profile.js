@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../utils/supabaseClient'; // Removed stripePromise import
+import { supabase } from '../utils/supabaseClient';
 import LendingHistory from './LendingHistory';
 import CheckoutForm from './CheckoutForm';
 
@@ -180,7 +180,7 @@ function Profile() {
         return;
       }
       setLoading(false); // Set loading to false after fetch
-      navigate('/checkout', { state: { clientSecret: data.client_secret, amount } }); // Navigate to checkout page
+      navigate('/checkout', { state: { clientSecret: data.client_secret } }); // Pass only clientSecret
     } catch (err) {
       console.error('Error in handleDeposit:', err.message, err.stack);
       setError(`An error occurred while initiating the payment: ${err.message.includes('CORS') ? 'CORS policy violation - please check server configuration' : err.message}`);
