@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { supabase } from '../utils/supabaseClient';
 import LendingHistory from './LendingHistory';
 import CheckoutForm from './CheckoutForm';
+import Dashboard from './Dashboard';
+import ProfileSettings from './ProfileSettings';
 
 function Profile() {
   const [user, setUser] = useState(null);
@@ -42,7 +45,7 @@ function Profile() {
         console.log('Fetching profile data...');
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('role, loan_application_status')
+          .select('role, loan_application_status, total_loans_funded, borrowers_impacted, profile_picture, bio')
           .eq('id', user.id)
           .single();
         if (profileError) {
@@ -151,9 +154,11 @@ function Profile() {
     } else if (errorParam) {
       console.error('Payment error from redirect:', errorParam);
       setError(errorParam);
+      toast.error(errorParam, { position: 'top-right' });
     } else if (urlParams.get('cancelled') === 'true') {
       console.log('Payment cancelled via redirect');
       setError('Payment was cancelled.');
+      toast.error('Payment was cancelled.', { position: 'top-right' });
     } else {
       console.log('No redirect parameters detected');
     }
@@ -166,6 +171,7 @@ function Profile() {
     const amount = parseFloat(depositAmount);
     if (isNaN(amount) || amount <= 0) {
       setError('Please enter a valid positive amount.');
+      toast.error('Please enter a valid positive amount.', { position: 'top-right' });
       setLoading(false);
       return;
     }
@@ -174,11 +180,13 @@ function Profile() {
       const requestBody = { user_id: localStorage.getItem('user_id'), amount: amount * 100 };
       console.log('Request body:', requestBody);
       localStorage.setItem('lastDepositAmount', amount.toString()); // Store the deposit amount
+      console.log('Stored lastDepositAmount in localStorage:', localStorage.getItem('lastDepositAmount'));
 
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
         console.error('Session error:', sessionError?.message || 'No session found');
         setError('Please log in again to continue.');
+        toast.error('Please log in again to continue.', { position: 'top-right' });
         setLoading(false);
         return;
       }
@@ -202,6 +210,7 @@ function Profile() {
         const errorMessage = data.error || 'No sessionId returned';
         console.error('Checkout Session error:', errorMessage);
         setError(`Failed to create checkout session: ${errorMessage}`);
+        toast.error(`Failed to create checkout session: ${errorMessage}`, { position: 'top-right' });
         setLoading(false);
         return;
       }
@@ -210,6 +219,7 @@ function Profile() {
     } catch (err) {
       console.error('Error in handleDeposit:', err.message, err.stack);
       setError(`An error occurred while initiating the payment: ${err.message.includes('CORS') ? 'CORS policy violation - please check server configuration' : err.message}`);
+      toast.error(`An error occurred while initiating the payment: ${err.message}`, { position: 'top-right' });
       setLoading(false);
     }
   };
@@ -219,26 +229,92 @@ function Profile() {
     const amount = parseFloat(withdrawalAmount);
     if (isNaN(amount) || amount <= 0 || amount > (wallet?.balance || 0)) {
       setError('Please enter a valid amount within your balance.');
+      toast.error('Please enter a valid amount within your balance.', { position: 'top-right' });
       return;
     }
     setLoading(true);
     setError(null);
     if (window.confirm(`Confirm withdrawing $${amount}?`)) {
-      const { error } = await supabase.rpc('create_stripe_withdrawal', {
-        p_user_id: user.id,
-        p_amount: amount * 100,
-      });
-      if (error) {
-        console.error('Withdrawal error:', error.message);
-        setError('Failed to initiate withdrawal. Please try again.');
-      } else {
-        setWallet({ ...wallet, balance: (wallet.balance || 0) - amount });
+      try {
+        console.log('Initiating withdrawal with user:', user?.id, 'and amount:', amount);
+        const requestBody = { user_id: localStorage.getItem('user_id'), amount: amount * 100 };
+        console.log('Withdrawal request body:', requestBody);
+
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !sessionData.session) {
+          console.error('Session error:', sessionError?.message || 'No session found');
+          setError('Please log in again to continue.');
+          toast.error('Please log in again to continue.', { position: 'top-right' });
+          setLoading(false);
+          return;
+        }
+        const accessToken = sessionData.session.access_token;
+        console.log('Access token for withdrawal:', accessToken);
+
+        // Call the create-payout Edge Function
+        const response = await fetch('https://iqransnptrzuixvlhbvn.supabase.co/functions/v1/create-payout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(requestBody),
+        });
+        console.log('Payout Edge Function Response Status:', response.status, response.statusText);
+        const data = await response.json();
+        console.log('Payout Edge Function Response Data:', data);
+
+        if (!response.ok || !data.payoutId) {
+          const errorMessage = data.error || 'No payoutId returned';
+          console.error('Payout error:', errorMessage);
+          setError(`Failed to initiate withdrawal: ${errorMessage}`);
+          toast.error(`Failed to initiate withdrawal: ${errorMessage}`, { position: 'top-right' });
+          setLoading(false);
+          return;
+        }
+
+        // Update the wallet balance locally
+        const newBalance = wallet.balance - amount;
+        const { error: updateError } = await supabase
+          .from('wallets')
+          .update({ balance: newBalance })
+          .eq('id', localStorage.getItem('user_id'))
+          .single();
+        if (updateError) {
+          console.error('Error updating wallet balance after withdrawal:', updateError.message);
+          setError('Failed to update wallet balance after withdrawal.');
+          toast.error('Failed to update wallet balance after withdrawal.', { position: 'top-right' });
+          setLoading(false);
+          return;
+        }
+
+        setWallet({ ...wallet, balance: newBalance });
         setWithdrawalAmount('');
         setSuccess('Withdrawal initiated! Funds will be transferred soon.');
+        toast.success('Withdrawal initiated! Funds will be transferred soon.', { position: 'top-right' });
         setTimeout(() => setSuccess(''), 3000);
+        console.log('Wallet balance updated after withdrawal to:', newBalance);
+
+        // Re-fetch wallet data to ensure consistency
+        const { data: refreshedWalletData, error: refreshError } = await supabase
+          .from('wallets')
+          .select('balance')
+          .eq('id', localStorage.getItem('user_id'))
+          .single();
+        if (refreshError) {
+          console.error('Error refreshing wallet data:', refreshError.message);
+        } else {
+          setWallet(refreshedWalletData);
+          console.log('Refreshed wallet data:', refreshedWalletData);
+        }
+      } catch (err) {
+        console.error('Error in handleWithdrawal:', err.message, err.stack);
+        setError('An unexpected error occurred during withdrawal: ' + err.message);
+        toast.error('An unexpected error occurred during withdrawal: ' + err.message, { position: 'top-right' });
+      } finally {
+        setLoading(false);
       }
     }
-    setLoading(false);
   };
 
   const handlePaymentSuccess = async (amount) => {
@@ -253,6 +329,7 @@ function Profile() {
       if (fetchError) {
         console.error('Error fetching current wallet balance:', fetchError.message, fetchError);
         setError('Failed to fetch wallet balance: ' + fetchError.message);
+        toast.error('Failed to fetch wallet balance: ' + fetchError.message, { position: 'top-right' });
         return;
       }
       console.log('Current wallet data:', data);
@@ -269,11 +346,13 @@ function Profile() {
       if (updateError) {
         console.error('Error updating wallet balance:', updateError.message, updateError);
         setError('Failed to update wallet balance: ' + updateError.message);
+        toast.error('Failed to update wallet balance: ' + updateError.message, { position: 'top-right' });
         return;
       }
       console.log('Wallet updated data:', updatedData);
       setWallet(prev => ({ ...prev, balance: newBalance })); // Force state update with prev state
       setSuccess('Deposit successful!');
+      toast.success('Deposit successful!', { position: 'top-right' });
       setTimeout(() => setSuccess(''), 3000);
       console.log('Wallet balance updated successfully to:', newBalance);
 
@@ -292,6 +371,7 @@ function Profile() {
     } catch (err) {
       console.error('Error in handlePaymentSuccess:', err.message, err.stack);
       setError('An unexpected error occurred while updating the wallet: ' + err.message);
+      toast.error('An unexpected error occurred while updating the wallet: ' + err.message, { position: 'top-right' });
     }
   };
 
@@ -301,79 +381,122 @@ function Profile() {
   if (!user) return <p className="container mx-auto py-16 text-center">Please log in to view your profile.</p>;
 
   return (
-    <div className="container mx-auto py-16">
-      <h2 className="text-4xl font-bold text-afrilend-green mb-8 text-center">My Profile</h2>
+    <div className="max-w-4xl mx-auto bg-kiva-bg p-8">
+      <h2 className="text-4xl font-bold text-kiva-green mb-8 text-center">My Profile</h2>
       {profile ? (
         <>
           {profile.role === 'lender' && wallet ? (
-            <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl p-6 border border-gray-200 transform hover:scale-105 transition duration-300">
-              <h3 className="text-2xl font-semibold text-afrilend-green mb-4 text-center">Lender Dashboard</h3>
-              <div className="bg-afrilend-gray p-4 rounded-lg mb-4 text-center">
-                <p className="text-lg text-gray-800">Wallet Balance: <span className="font-bold text-xl">${wallet.balance.toFixed(2)}</span></p>
-              </div>
-              <div className="bg-afrilend-gray p-4 rounded-lg mb-6 text-center">
-                <p className="text-lg text-gray-800">Total Funded: <span className="font-bold text-xl">${totalFunded.toFixed(2)}</span></p>
-              </div>
-              <div className="space-y-6">
-                <form className="space-y-4">
-                  <input
-                    type="number"
-                    placeholder="Deposit amount"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-afrilend-green"
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    min="1"
-                    step="0.01"
-                    disabled={loading}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={handleDeposit}
-                    className={`w-full bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    disabled={loading}
-                  >
-                    {loading ? 'Processing...' : 'Deposit'}
-                  </button>
-                </form>
-                {loading && (
-                  <div>
-                    <p className="text-center">Redirecting to Stripe Checkout...</p>
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <div className="flex items-center space-x-4">
+                    {profile.profile_picture && (
+                      <img
+                        src={profile.profile_picture}
+                        alt="Profile"
+                        className="w-16 h-16 rounded-full border-2 border-kiva-green"
+                      />
+                    )}
+                    <div>
+                      <h3 className="text-xl font-semibold text-kiva-text">Welcome, Lender!</h3>
+                      {profile.bio && <p className="text-sm text-gray-600">{profile.bio}</p>}
+                    </div>
                   </div>
-                )}
-                <form onSubmit={handleWithdrawal} className="space-y-4">
-                  <input
-                    type="number"
-                    placeholder="Withdrawal amount"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-afrilend-green"
-                    value={withdrawalAmount}
-                    onChange={(e) => setWithdrawalAmount(e.target.value)}
-                    min="1"
-                    step="0.01"
-                    disabled={loading}
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className={`w-full bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    disabled={loading || !wallet?.balance || wallet.balance === 0}
-                  >
-                    {loading ? 'Processing...' : 'Withdraw'}
-                  </button>
-                </form>
-                {success && <p className="text-afrilend-green text-center mb-4">{success}</p>}
-                <LendingHistory userId={user.id} />
-                <button
-                  onClick={() => navigate('/loans')}
-                  className="w-full mt-6 bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition"
-                >
-                  Fund a Loan
-                </button>
+                </div>
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h3 className="text-lg font-medium text-kiva-text mb-2">Wallet Overview</h3>
+                  <p className="text-2xl font-bold text-kiva-green">${wallet.balance.toFixed(2)}</p>
+                  <p className="text-sm text-gray-600">Available Balance</p>
+                </div>
               </div>
+              <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h3 className="text-lg font-medium text-kiva-text mb-4">Your Impact</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-kiva-green">${totalFunded.toFixed(2)}</p>
+                    <p className="text-sm text-gray-600">Total Funded</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-kiva-green">{profile.total_loans_funded || 0}</p>
+                    <p className="text-sm text-gray-600">Loans Funded</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-kiva-green">{profile.borrowers_impacted || 0}</p>
+                    <p className="text-sm text-gray-600">Borrowers Impacted</p>
+                  </div>
+                </div>
+              </div>
+              <Dashboard
+                totalFunded={totalFunded}
+                totalLoansFunded={profile.total_loans_funded || 0}
+                borrowersImpacted={profile.borrowers_impacted || 0}
+                lendingHistory={[{ date: '3/15/2025', amount: 25 }, { date: '3/15/2025', amount: 25 }]} // Replace with actual data
+              />
+              <ProfileSettings
+                userId={user.id}
+                profile={profile}
+                onUpdate={(updatedProfile) => setProfile({ ...profile, ...updatedProfile })}
+              />
+              <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h3 className="text-lg font-medium text-kiva-text mb-4">Manage Funds</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <form className="space-y-4">
+                    <input
+                      type="number"
+                      placeholder="Deposit amount"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-kiva-green"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      min="1"
+                      step="0.01"
+                      disabled={loading}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={handleDeposit}
+                      className={`w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={loading}
+                    >
+                      {loading ? 'Processing...' : 'Deposit'}
+                    </button>
+                  </form>
+                  <form onSubmit={handleWithdrawal} className="space-y-4">
+                    <input
+                      type="number"
+                      placeholder="Withdrawal amount"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-kiva-green"
+                      value={withdrawalAmount}
+                      onChange={(e) => setWithdrawalAmount(e.target.value)}
+                      min="1"
+                      step="0.01"
+                      disabled={loading}
+                      required
+                    />
+                    <button
+                      type="submit"
+                      className={`w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={loading || !wallet?.balance || wallet.balance === 0}
+                    >
+                      {loading ? 'Processing...' : 'Withdraw'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h3 className="text-lg font-medium text-kiva-text mb-4">Lending History</h3>
+                <LendingHistory userId={user.id} />
+              </div>
+              <button
+                onClick={() => navigate('/loans')}
+                className="w-full mt-6 bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+              >
+                Fund a Loan
+              </button>
             </div>
           ) : profile.role === 'borrower' ? (
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl p-6 border border-gray-200 transform hover:scale-105 transition duration-300">
-              <h3 className="text-2xl font-semibold text-afrilend-green mb-4 text-center">Borrower Dashboard</h3>
+              <h3 className="text-2xl font-semibold text-kiva-green mb-4 text-center">Borrower Dashboard</h3>
               <p className="text-gray-600 mb-4 text-center">Application Status: {profile.loan_application_status || 'Not applied'}</p>
               {loans.length > 0 ? (
                 <div className="mb-6">
@@ -392,7 +515,7 @@ function Profile() {
               )}
               <button
                 onClick={() => navigate('/apply-loan')}
-                className="w-full bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition"
+                className="w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
               >
                 Apply for a Loan
               </button>

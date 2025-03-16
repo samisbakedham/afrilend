@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 import Home from './components/Home';
 import Loans from './components/Loans';
 import Login from './components/Login';
@@ -12,6 +13,7 @@ import CheckoutPage from './components/CheckoutPage';
 function App() {
   return (
     <Router>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <div className="bg-afrilend-gray">
         <Nav />
         <Routes>

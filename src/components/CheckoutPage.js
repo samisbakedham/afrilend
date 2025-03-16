@@ -37,9 +37,11 @@ function CheckoutPage() {
   }, [sessionId, navigate]);
 
   return (
-    <div className="container mx-auto py-16 text-center">
-      <h2 className="text-2xl font-semibold text-afrilend-green mb-4">Processing Payment...</h2>
-      <p>Please wait while we redirect you to Stripe Checkout.</p>
+    <div className="min-h-screen bg-kiva-bg flex items-center justify-center">
+      <div className="bg-white p-8 rounded-lg shadow-md text-center">
+        <h2 className="text-2xl font-semibold text-kiva-green mb-4">Processing Payment...</h2>
+        <p className="text-kiva-text">Please wait while we redirect you to Stripe Checkout.</p>
+      </div>
     </div>
   );
 }
