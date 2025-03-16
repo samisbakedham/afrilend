@@ -7,10 +7,22 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
 
 console.log('Starting create-payment-intent function...');
 
+// Whitelist of allowed origins
+const allowedOrigins = [
+  'http://localhost:3000', // Development
+  'https://afrilend.vercel.app', // Vercel deployment
+];
+
 serve(async (req) => {
-  // Set CORS headers to allow requests from localhost:3000
+  // Get the origin from the request headers
+  const origin = req.headers.get('Origin') || '';
+  
+  // Determine if the origin is allowed
+  const corsOrigin = allowedOrigins.includes(origin) ? origin : null;
+
+  // Set CORS headers
   const headers = new Headers({
-    'Access-Control-Allow-Origin': 'http://localhost:3000', // Allow your dev server
+    'Access-Control-Allow-Origin': corsOrigin || '', // Only allow whitelisted origins
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   });
@@ -64,7 +76,7 @@ serve(async (req) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
       currency: 'usd',
-      payment_method_types: ['card'], // Removed 'apple_pay'
+      payment_method_types: ['card'],
       description: 'Wallet Deposit for AfriLend',
     });
 
