@@ -132,6 +132,7 @@ function Profile() {
   }, [navigate]);
 
   const handleDeposit = async () => {
+    if (loading) return; // Prevent multiple submissions
     setLoading(true);
     setError(null);
     const amount = parseFloat(depositAmount);
@@ -260,7 +261,7 @@ function Profile() {
                       setAmount={setDepositAmount}
                       onDeposit={handlePaymentSuccess}
                       loading={loading}
-                      setLoading={setLoading} // Pass setLoading to control state
+                      setLoading={setLoading}
                     />
                   </Elements>
                 ) : (
