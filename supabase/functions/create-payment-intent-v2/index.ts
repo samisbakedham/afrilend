@@ -40,4 +40,54 @@ serve(async (req) => {
     console.log('Raw request body:', bodyText);
 
     const contentType = req.headers.get('Content-Type');
-    console.log('Content-Type:', contentTyp
+    console.log('Content-Type:', contentType);
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('Invalid Content-Type:', contentType);
+      return new Response(JSON.stringify({ error: 'Content-Type must be application/json' }), {
+        status: 400,
+        headers,
+      });
+    }
+
+    let body;
+    try {
+      body = JSON.parse(bodyText);
+    } catch (error) {
+      console.error('Error parsing JSON body:', error.message);
+      return new Response(JSON.stringify({ error: 'Invalid JSON body: ' + error.message }), {
+        status: 400,
+        headers,
+      });
+    }
+
+    const { user_id, amount } = body;
+    console.log('Parsed request body:', { user_id, amount });
+
+    if (!user_id || !amount || amount <= 0) {
+      console.error('Invalid input:', { user_id, amount });
+      return new Response(JSON.stringify({ error: 'Invalid user_id or amount' }), {
+        status: 400,
+        headers,
+      });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount,
+      currency: 'usd',
+      payment_method_types: ['card'],
+      description: 'Wallet Deposit for AfriLend',
+    });
+
+    console.log('Payment Intent created:', paymentIntent);
+    return new Response(JSON.stringify({ client_secret: paymentIntent.client_secret }), {
+      status: 200,
+      headers,
+    });
+  } catch (error) {
+    console.error('Error creating Payment Intent:', error.message, error.stack);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers,
+    });
+  }
+});
