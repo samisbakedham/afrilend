@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, stripePromise } from '../utils/supabaseClient';
+import { supabase } from '../utils/supabaseClient'; // Removed stripePromise import
 import LendingHistory from './LendingHistory';
-import { Elements } from '@stripe/react-stripe-js';
 import CheckoutForm from './CheckoutForm';
 
 function Profile() {
@@ -17,7 +16,6 @@ function Profile() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
-  const [clientSecret, setClientSecret] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +31,11 @@ function Profile() {
           return;
         }
         setUser(user);
+        localStorage.setItem('user_id', user.id); // Store user_id for Checkout
+        const session = await supabase.auth.getSession();
+        if (session.data.session) {
+          localStorage.setItem('supabase_access_token', session.data.session.access_token);
+        }
         console.log('User fetched:', user);
 
         console.log('Fetching profile data...');
@@ -142,11 +145,10 @@ function Profile() {
       return;
     }
     try {
-      console.log('Creating Stripe Payment Intent with user:', user.id, 'and amount:', amount);
-      const requestBody = { user_id: user.id, amount: amount * 100 };
-      console.log('Request body being sent:', requestBody);
+      console.log('Starting handleDeposit with user:', user.id, 'and amount:', amount);
+      const requestBody = { user_id: localStorage.getItem('user_id'), amount: amount * 100 };
+      console.log('Request body:', requestBody);
       
-      // Get the current session to ensure we have a valid access token
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
         console.error('Session error:', sessionError?.message || 'No session found');
@@ -155,8 +157,10 @@ function Profile() {
         return;
       }
       const accessToken = sessionData.session.access_token;
+      localStorage.setItem('supabase_access_token', accessToken); // Update token
       console.log('Access token:', accessToken);
 
+      console.log('Sending fetch request to Edge Function');
       const response = await fetch('https://iqransnptrzuixvlhbvn.supabase.co/functions/v1/create-payment-intent-v2', {
         method: 'POST',
         headers: {
@@ -175,9 +179,8 @@ function Profile() {
         setLoading(false);
         return;
       }
-      setClientSecret(data.client_secret);
-      window.localStorage.setItem('clientSecret', data.client_secret);
-      console.log('Client secret set:', data.client_secret);
+      setLoading(false); // Set loading to false after fetch
+      navigate('/checkout', { state: { clientSecret: data.client_secret, amount } }); // Navigate to checkout page
     } catch (err) {
       console.error('Error in handleDeposit:', err.message, err.stack);
       setError(`An error occurred while initiating the payment: ${err.message.includes('CORS') ? 'CORS policy violation - please check server configuration' : err.message}`);
@@ -226,8 +229,6 @@ function Profile() {
       }
       setWallet({ ...wallet, balance: (wallet.balance || 0) + amount });
       setDepositAmount('');
-      setClientSecret(null);
-      window.localStorage.removeItem('clientSecret');
       setSuccess('Deposit successful!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -236,7 +237,7 @@ function Profile() {
     }
   };
 
-  console.log('Rendering Profile with state:', { user, profile, wallet, loans, error, loading, success, clientSecret });
+  console.log('Rendering Profile with state:', { user, profile, wallet, loans, error, loading, success, depositAmount });
 
   if (error) return <p className="container mx-auto py-16 text-center text-red-600">{error}</p>;
   if (!user) return <p className="container mx-auto py-16 text-center">Please log in to view your profile.</p>;
@@ -256,38 +257,31 @@ function Profile() {
                 <p className="text-lg text-gray-800">Total Funded: <span className="font-bold text-xl">${totalFunded.toFixed(2)}</span></p>
               </div>
               <div className="space-y-6">
-                {clientSecret ? (
-                  <Elements stripe={stripePromise} options={{ clientSecret }}>
-                    <CheckoutForm
-                      amount={depositAmount}
-                      setAmount={setDepositAmount}
-                      onDeposit={handlePaymentSuccess}
-                      loading={loading}
-                      setLoading={setLoading}
-                    />
-                  </Elements>
-                ) : (
-                  <form className="space-y-4">
-                    <input
-                      type="number"
-                      placeholder="Deposit amount"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-afrilend-green"
-                      value={depositAmount}
-                      onChange={(e) => setDepositAmount(e.target.value)}
-                      min="1"
-                      step="0.01"
-                      disabled={loading}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={handleDeposit}
-                      className={`w-full bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={loading}
-                    >
-                      {loading ? 'Processing...' : 'Deposit'}
-                    </button>
-                  </form>
+                <form className="space-y-4">
+                  <input
+                    type="number"
+                    placeholder="Deposit amount"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-afrilend-green"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    min="1"
+                    step="0.01"
+                    disabled={loading}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDeposit}
+                    className={`w-full bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={loading}
+                  >
+                    {loading ? 'Processing...' : 'Deposit'}
+                  </button>
+                </form>
+                {loading && (
+                  <div>
+                    <p className="text-center">Redirecting to Stripe Checkout...</p>
+                  </div>
                 )}
                 <form onSubmit={handleWithdrawal} className="space-y-4">
                   <input
@@ -309,15 +303,15 @@ function Profile() {
                     {loading ? 'Processing...' : 'Withdraw'}
                   </button>
                 </form>
+                {success && <p className="text-afrilend-green text-center mb-4">{success}</p>}
+                <LendingHistory userId={user.id} />
+                <button
+                  onClick={() => navigate('/loans')}
+                  className="w-full mt-6 bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition"
+                >
+                  Fund a Loan
+                </button>
               </div>
-              {success && <p className="text-afrilend-green text-center mb-4">{success}</p>}
-              <LendingHistory userId={user.id} />
-              <button
-                onClick={() => navigate('/loans')}
-                className="w-full mt-6 bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition"
-              >
-                Fund a Loan
-              </button>
             </div>
           ) : profile.role === 'borrower' ? (
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl p-6 border border-gray-200 transform hover:scale-105 transition duration-300">
