@@ -58,13 +58,33 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       if (error) {
         console.error('Payment error:', error.message, error.code, error.type, error);
         setErrorMessage(error.message);
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        console.log('Payment succeeded:', paymentIntent);
-        onDeposit();
-        setErrorMessage(null);
-      } else {
-        console.error('Payment did not succeed:', paymentIntent?.status, paymentIntent);
-        setErrorMessage(`Payment status: ${paymentIntent?.status || 'unknown'}. Please try again.`);
+      } else if (paymentIntent) {
+        console.log('Payment Intent response:', paymentIntent);
+        switch (paymentIntent.status) {
+          case 'succeeded':
+            console.log('Payment succeeded:', paymentIntent);
+            onDeposit();
+            setErrorMessage(null);
+            break;
+          case 'requires_action':
+            console.log('Requires action:', paymentIntent);
+            const { error: actionError } = await stripe.handleCardAction(paymentIntent.client_secret);
+            if (actionError) {
+              console.error('Action error:', actionError.message, actionError);
+              setErrorMessage(actionError.message);
+            } else {
+              console.log('Action handled, confirming again:', paymentIntent);
+              // Retry confirmCardPayment if needed (optional, depending on use case)
+            }
+            break;
+          case 'requires_payment_method':
+            console.error('Requires payment method:', paymentIntent);
+            setErrorMessage('Payment method not attached. Please try again.');
+            break;
+          default:
+            console.error('Payment did not succeed:', paymentIntent.status, paymentIntent);
+            setErrorMessage(`Payment status: ${paymentIntent.status}. Please try again.`);
+        }
       }
     } catch (err) {
       console.error('Unexpected error in handleSubmit:', err.message, err.stack);
