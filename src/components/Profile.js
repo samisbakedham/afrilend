@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, stripePromise } from '../utils/supabaseClient';
 import LendingHistory from './LendingHistory';
-import { Elements, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import CheckoutForm from './CheckoutForm';
 
 function Profile() {
@@ -260,6 +260,7 @@ function Profile() {
                       setAmount={setDepositAmount}
                       onDeposit={handlePaymentSuccess}
                       loading={loading}
+                      setLoading={setLoading} // Pass setLoading to control state
                     />
                   </Elements>
                 ) : (
