@@ -13,7 +13,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
     if (!stripe || !elements) {
       setErrorMessage('Stripe has not loaded yet.');
       setLoading(false);
-      console.error('Stripe or elements not loaded');
+      console.error('Stripe or elements not loaded:', { stripe, elements });
       return;
     }
 
@@ -43,14 +43,17 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       console.log('Card element retrieved');
 
       console.log('Confirming card payment with client secret:', clientSecret);
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: {
-            email: 'test@example.com', // Replace with dynamic user email if needed
+      const { error, paymentIntent } = await Promise.race([
+        stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              email: 'test@example.com', // Replace with dynamic user email if needed
+            },
           },
-        },
-      });
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Payment timed out after 10 seconds')), 10000)),
+      ]);
 
       if (error) {
         console.error('Payment error:', error.message, error.code, error.type, error);

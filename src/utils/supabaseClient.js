@@ -15,6 +15,12 @@ if (!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY) {
 }
 
 const supabase = createClient(process.env.REACT_APP_SUPABASE_URL, process.env.REACT_APP_SUPABASE_ANON_KEY);
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY).then(stripe => {
+  console.log('Stripe loaded successfully:', stripe);
+  return stripe;
+}).catch(err => {
+  console.error('Failed to load Stripe:', err);
+  return null;
+});
 
 export { supabase, stripePromise };
