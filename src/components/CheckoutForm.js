@@ -8,6 +8,8 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    console.log('handleSubmit triggered');
+
     if (!stripe || !elements) {
       setErrorMessage('Stripe has not loaded yet.');
       setLoading(false);
@@ -16,7 +18,8 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
     }
 
     try {
-      console.log('Submitting payment with Stripe...');
+      console.log('Stripe instance available:', stripe);
+      console.log('Elements instance available:', elements);
       const clientSecret = window.localStorage.getItem('clientSecret');
       console.log('Client Secret from localStorage:', clientSecret);
 
@@ -28,6 +31,8 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       }
 
       setLoading(true);
+      console.log('Loading state set to true');
+
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
         setErrorMessage('Card element not found.');
@@ -35,6 +40,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
         console.error('Card element not initialized');
         return;
       }
+      console.log('Card element retrieved');
 
       console.log('Confirming card payment with client secret:', clientSecret);
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
@@ -61,6 +67,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       console.error('Unexpected error in handleSubmit:', err.message, err.stack);
       setErrorMessage('An unexpected error occurred: ' + err.message);
     } finally {
+      console.log('Loading state set to false in finally block');
       setLoading(false);
     }
   };
