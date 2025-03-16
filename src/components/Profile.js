@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { supabase } from '../utils/supabaseClient';
 import LendingHistory from './LendingHistory';
-import CheckoutForm from './CheckoutForm';
 import Dashboard from './Dashboard';
 import ProfileSettings from './ProfileSettings';
 
@@ -35,7 +34,7 @@ function Profile() {
           return;
         }
         setUser(user);
-        localStorage.setItem('user_id', user.id); // Store user_id for Checkout
+        localStorage.setItem('user_id', user.id);
         const session = await supabase.auth.getSession();
         if (session.data.session) {
           localStorage.setItem('supabase_access_token', session.data.session.access_token);
@@ -138,18 +137,18 @@ function Profile() {
     getUserData();
   }, [navigate]);
 
-  // Handle payment success redirect (separate useEffect at top level)
+  // Handle payment success redirect
   useEffect(() => {
     console.log('Profile.js: useEffect triggered for redirect handling');
     const urlParams = new URLSearchParams(window.location.search);
     console.log('URL Search Params:', Object.fromEntries(urlParams));
     const successParam = urlParams.get('success');
     const errorParam = urlParams.get('error');
-    const amountParam = urlParams.get('amount'); // Extract amount from redirect if possible
+    const amountParam = urlParams.get('amount');
     if (successParam === 'true') {
       const depositAmount = parseFloat(amountParam) || parseFloat(localStorage.getItem('lastDepositAmount')) || 0;
       console.log('Payment succeeded via redirect, calling handlePaymentSuccess with amount:', depositAmount);
-      localStorage.setItem('lastDepositAmount', depositAmount.toString()); // Store for next use
+      localStorage.setItem('lastDepositAmount', depositAmount.toString());
       handlePaymentSuccess(depositAmount);
     } else if (errorParam) {
       console.error('Payment error from redirect:', errorParam);
@@ -162,10 +161,10 @@ function Profile() {
     } else {
       console.log('No redirect parameters detected');
     }
-  }, []); // Empty dependency array to run once on mount
+  }, []);
 
   const handleDeposit = async () => {
-    if (loading) return; // Prevent multiple submissions
+    if (loading) return;
     setLoading(true);
     setError(null);
     const amount = parseFloat(depositAmount);
@@ -179,7 +178,7 @@ function Profile() {
       console.log('Starting handleDeposit with user:', user?.id, 'and amount:', amount);
       const requestBody = { user_id: localStorage.getItem('user_id'), amount: amount * 100 };
       console.log('Request body:', requestBody);
-      localStorage.setItem('lastDepositAmount', amount.toString()); // Store the deposit amount
+      localStorage.setItem('lastDepositAmount', amount.toString());
       console.log('Stored lastDepositAmount in localStorage:', localStorage.getItem('lastDepositAmount'));
 
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -191,7 +190,7 @@ function Profile() {
         return;
       }
       const accessToken = sessionData.session.access_token;
-      localStorage.setItem('supabase_access_token', accessToken); // Update token
+      localStorage.setItem('supabase_access_token', accessToken);
       console.log('Access token:', accessToken);
 
       console.log('Sending fetch request to Edge Function');
@@ -214,11 +213,11 @@ function Profile() {
         setLoading(false);
         return;
       }
-      setLoading(false); // Set loading to false after fetch
-      navigate('/checkout', { state: { sessionId: data.sessionId } }); // Pass sessionId
+      setLoading(false);
+      navigate('/checkout', { state: { sessionId: data.sessionId, amount } }); // Pass amount in state
     } catch (err) {
       console.error('Error in handleDeposit:', err.message, err.stack);
-      setError(`An error occurred while initiating the payment: ${err.message.includes('CORS') ? 'CORS policy violation - please check server configuration' : err.message}`);
+      setError(`An error occurred while initiating the payment: ${err.message}`);
       toast.error(`An error occurred while initiating the payment: ${err.message}`, { position: 'top-right' });
       setLoading(false);
     }
@@ -251,7 +250,6 @@ function Profile() {
         const accessToken = sessionData.session.access_token;
         console.log('Access token for withdrawal:', accessToken);
 
-        // Call the create-payout Edge Function
         const response = await fetch('https://iqransnptrzuixvlhbvn.supabase.co/functions/v1/create-payout', {
           method: 'POST',
           headers: {
@@ -273,7 +271,6 @@ function Profile() {
           return;
         }
 
-        // Update the wallet balance locally
         const newBalance = wallet.balance - amount;
         const { error: updateError } = await supabase
           .from('wallets')
@@ -295,7 +292,6 @@ function Profile() {
         setTimeout(() => setSuccess(''), 3000);
         console.log('Wallet balance updated after withdrawal to:', newBalance);
 
-        // Re-fetch wallet data to ensure consistency
         const { data: refreshedWalletData, error: refreshError } = await supabase
           .from('wallets')
           .select('balance')
@@ -320,7 +316,6 @@ function Profile() {
   const handlePaymentSuccess = async (amount) => {
     console.log('handlePaymentSuccess called with amount:', amount, 'and user_id:', localStorage.getItem('user_id'));
     try {
-      // Fetch the current wallet balance
       const { data, error: fetchError } = await supabase
         .from('wallets')
         .select('balance')
@@ -337,7 +332,6 @@ function Profile() {
       const newBalance = currentBalance + amount;
       console.log('Updating wallet balance from', currentBalance, 'to', newBalance);
 
-      // Update the wallet balance
       const { error: updateError, data: updatedData } = await supabase
         .from('wallets')
         .update({ balance: newBalance })
@@ -350,13 +344,12 @@ function Profile() {
         return;
       }
       console.log('Wallet updated data:', updatedData);
-      setWallet(prev => ({ ...prev, balance: newBalance })); // Force state update with prev state
+      setWallet(prev => ({ ...prev, balance: newBalance }));
       setSuccess('Deposit successful!');
       toast.success('Deposit successful!', { position: 'top-right' });
       setTimeout(() => setSuccess(''), 3000);
       console.log('Wallet balance updated successfully to:', newBalance);
 
-      // Re-fetch wallet data to ensure consistency
       const { data: refreshedWalletData, error: refreshError } = await supabase
         .from('wallets')
         .select('balance')
@@ -386,9 +379,9 @@ function Profile() {
       {profile ? (
         <>
           {profile.role === 'lender' && wallet ? (
-            <div>
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-white p-6 rounded-lg shadow-md">
                   <div className="flex items-center space-x-4">
                     {profile.profile_picture && (
                       <img
@@ -399,17 +392,17 @@ function Profile() {
                     )}
                     <div>
                       <h3 className="text-xl font-semibold text-kiva-text">Welcome, Lender!</h3>
-                      {profile.bio && <p className="text-sm text-gray-600">{profile.bio}</p>}
+                      {profile.bio && <p className="text-sm text-gray-600 mt-1">{profile.bio}</p>}
                     </div>
                   </div>
                 </div>
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-white p-6 rounded-lg shadow-md">
                   <h3 className="text-lg font-medium text-kiva-text mb-2">Wallet Overview</h3>
                   <p className="text-2xl font-bold text-kiva-green">${wallet.balance.toFixed(2)}</p>
                   <p className="text-sm text-gray-600">Available Balance</p>
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+              <div className="bg-white p-6 rounded-lg shadow-md">
                 <h3 className="text-lg font-medium text-kiva-text mb-4">Your Impact</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
@@ -430,14 +423,17 @@ function Profile() {
                 totalFunded={totalFunded}
                 totalLoansFunded={profile.total_loans_funded || 0}
                 borrowersImpacted={profile.borrowers_impacted || 0}
-                lendingHistory={[{ date: '3/15/2025', amount: 25 }, { date: '3/15/2025', amount: 25 }]} // Replace with actual data
+                lendingHistory={[
+                  { date: '3/15/2025', amount: 25 },
+                  { date: '3/16/2025', amount: 100 }, // Updated with different dates
+                ]}
               />
               <ProfileSettings
                 userId={user.id}
                 profile={profile}
                 onUpdate={(updatedProfile) => setProfile({ ...profile, ...updatedProfile })}
               />
-              <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+              <div className="bg-white p-6 rounded-lg shadow-md">
                 <h3 className="text-lg font-medium text-kiva-text mb-4">Manage Funds</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <form className="space-y-4">
@@ -483,7 +479,7 @@ function Profile() {
                   </form>
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+              <div className="bg-white p-6 rounded-lg shadow-md mt-6">
                 <h3 className="text-lg font-medium text-kiva-text mb-4">Lending History</h3>
                 <LendingHistory userId={user.id} />
               </div>
