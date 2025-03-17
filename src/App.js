@@ -11,6 +11,7 @@ import Nav from './components/Nav';
 import CheckoutPage from './components/CheckoutPage';
 import Dashboard from './components/Dashboard';
 import Users from './components/Users';
+import AuthCallback from './components/AuthCallback';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </div>
     </Router>
