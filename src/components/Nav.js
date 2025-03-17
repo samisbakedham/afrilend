@@ -23,7 +23,7 @@ function Nav() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    navigate('/auth'); // Redirect to /auth after logout instead of /login
+    navigate('/auth'); // Redirect to /auth after logout
   };
 
   return (

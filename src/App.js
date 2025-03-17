@@ -3,8 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import Home from './components/Home';
 import Loans from './components/Loans';
-import Login from './components/Login';
-import Signup from './components/Signup';
 import ApplyLoan from './components/ApplyLoan';
 import Profile from './components/Profile';
 import Nav from './components/Nav';
