@@ -10,7 +10,7 @@ console.log('Starting create-payout function...');
 // Whitelist of allowed origins
 const allowedOrigins = [
   'http://localhost:3000', // Development
-  'https://afrilend.vercel.app', // Vercel deployment
+  'https://candlelend.vercel.app', // Vercel deployment
 ];
 
 serve(async (req) => {
@@ -19,7 +19,7 @@ serve(async (req) => {
 
   // Set CORS headers
   const headers = new Headers({
-    'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : 'https://afrilend.vercel.app',
+    'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : 'https://candlelend.vercel.app',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400',

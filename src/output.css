@@ -769,12 +769,12 @@ video {
   border-color: rgb(209 213 219 / var(--tw-border-opacity));
 }
 
-.bg-afrilend-gray {
+.bg-candlelend-gray {
   --tw-bg-opacity: 1;
   background-color: rgb(245 245 245 / var(--tw-bg-opacity));
 }
 
-.bg-afrilend-green {
+.bg-candlelend-green {
   --tw-bg-opacity: 1;
   background-color: rgb(46 125 50 / var(--tw-bg-opacity));
 }
@@ -798,13 +798,13 @@ video {
   background-image: linear-gradient(to right, var(--tw-gradient-stops));
 }
 
-.from-afrilend-green {
+.from-candlelend-green {
   --tw-gradient-from: #2E7D32 var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(46 125 50 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
-.to-afrilend-yellow {
+.to-candlelend-yellow {
   --tw-gradient-to: #FDD835 var(--tw-gradient-to-position);
 }
 
@@ -936,12 +936,12 @@ video {
   font-style: italic;
 }
 
-.text-afrilend-green {
+.text-candlelend-green {
   --tw-text-opacity: 1;
   color: rgb(46 125 50 / var(--tw-text-opacity));
 }
 
-.text-afrilend-yellow {
+.text-candlelend-yellow {
   --tw-text-opacity: 1;
   color: rgb(253 216 53 / var(--tw-text-opacity));
 }
@@ -1036,17 +1036,17 @@ video {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
-.hover\:bg-afrilend-yellow:hover {
+.hover\:bg-candlelend-yellow:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(253 216 53 / var(--tw-bg-opacity));
 }
 
-.hover\:text-afrilend-green:hover {
+.hover\:text-candlelend-green:hover {
   --tw-text-opacity: 1;
   color: rgb(46 125 50 / var(--tw-text-opacity));
 }
 
-.hover\:text-afrilend-yellow:hover {
+.hover\:text-candlelend-yellow:hover {
   --tw-text-opacity: 1;
   color: rgb(253 216 53 / var(--tw-text-opacity));
 }
@@ -1066,7 +1066,7 @@ video {
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
 
-.focus\:ring-afrilend-green:focus {
+.focus\:ring-candlelend-green:focus {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(46 125 50 / var(--tw-ring-opacity));
 }

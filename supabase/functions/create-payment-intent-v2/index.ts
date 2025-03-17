@@ -10,7 +10,7 @@ console.log('Starting create-payment-intent-v2 function...');
 // Whitelist of allowed origins
 const allowedOrigins = [
   'http://localhost:3000', // Development
-  'https://afrilend.vercel.app', // Vercel deployment
+  'https://candlelend.vercel.app', // Vercel deployment
 ];
 
 serve(async (req) => {
@@ -19,7 +19,7 @@ serve(async (req) => {
 
   // Always set CORS headers, even if origin isn't in whitelist
   const headers = new Headers({
-    'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : 'https://afrilend.vercel.app', // Default to Vercel
+    'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : 'https://candlelend.vercel.app', // Default to Vercel
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400', // Cache preflight for 24 hours

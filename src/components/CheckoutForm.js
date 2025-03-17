@@ -60,8 +60,8 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
         mode: 'payment',
         amount: amount * 100,
         currency: 'usd',
-        successUrl: 'https://afrilend.vercel.app/profile?success=true',
-        cancelUrl: 'https://afrilend.vercel.app/profile?cancelled=true',
+        successUrl: 'https://candlelend.vercel.app/profile?success=true',
+        cancelUrl: 'https://candlelend.vercel.app/profile?cancelled=true',
         clientReferenceId: localStorage.getItem('user_id'),
         paymentIntentClientSecret: clientSecret,
       });
@@ -98,7 +98,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       <input
         type="number"
         placeholder="Deposit amount"
-        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-afrilend-green"
+        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-candlelend-green"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         min="1"
@@ -108,7 +108,7 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
       />
       <button
         type="submit"
-        className={`w-full bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`w-full bg-candlelend-green text-white py-2 rounded-lg hover:bg-candlelend-yellow hover:text-candlelend-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         disabled={loading}
       >
         {loading ? 'Processing...' : 'Pay with Card'}

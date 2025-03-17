@@ -16,7 +16,7 @@ function App() {
   return (
     <Router>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-      <div className="bg-afrilend-gray">
+      <div className="bg-candlelend-gray">
         <Nav />
         <Routes>
           <Route path="/" element={<Home />} />

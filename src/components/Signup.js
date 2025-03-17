@@ -57,7 +57,7 @@ function Signup() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://afrilend.vercel.app/profile',
+          redirectTo: 'https://candlelend.vercel.app/profile',
         },
       });
       if (error) throw error;

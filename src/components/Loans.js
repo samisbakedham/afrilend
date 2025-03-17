@@ -127,23 +127,23 @@ function Loans() {
 
   return (
     <div className="container mx-auto py-16">
-      <h2 className="text-4xl font-bold text-afrilend-green mb-4 text-center">Browse Loans</h2>
+      <h2 className="text-4xl font-bold text-candlelend-green mb-4 text-center">Browse Loans</h2>
       <div className="flex justify-center mb-8">
         <button
           onClick={() => setFilter('open')}
-          className={`px-4 py-2 rounded-l-lg ${filter === 'open' ? 'bg-afrilend-green text-white' : 'bg-gray-200 text-gray-800'} hover:bg-afrilend-yellow hover:text-afrilend-green transition`}
+          className={`px-4 py-2 rounded-l-lg ${filter === 'open' ? 'bg-candlelend-green text-white' : 'bg-gray-200 text-gray-800'} hover:bg-candlelend-yellow hover:text-candlelend-green transition`}
         >
           Open
         </button>
         <button
           onClick={() => setFilter('funded')}
-          className={`px-4 py-2 ${filter === 'funded' ? 'bg-afrilend-green text-white' : 'bg-gray-200 text-gray-800'} hover:bg-afrilend-yellow hover:text-afrilend-green transition`}
+          className={`px-4 py-2 ${filter === 'funded' ? 'bg-candlelend-green text-white' : 'bg-gray-200 text-gray-800'} hover:bg-candlelend-yellow hover:text-candlelend-green transition`}
         >
           Funded
         </button>
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-r-lg ${filter === 'all' ? 'bg-afrilend-green text-white' : 'bg-gray-200 text-gray-800'} hover:bg-afrilend-yellow hover:text-afrilend-green transition`}
+          className={`px-4 py-2 rounded-r-lg ${filter === 'all' ? 'bg-candlelend-green text-white' : 'bg-gray-200 text-gray-800'} hover:bg-candlelend-yellow hover:text-candlelend-green transition`}
         >
           All
         </button>
@@ -166,7 +166,7 @@ function Loans() {
               <p className="text-gray-600 text-center">Funded: ${funded.toFixed(2)}</p>
               <div className="relative w-full bg-gray-200 rounded-full h-4 mt-2 mb-4">
                 <div
-                  className="bg-afrilend-green h-4 rounded-full flex items-center justify-center text-xs text-white"
+                  className="bg-candlelend-green h-4 rounded-full flex items-center justify-center text-xs text-white"
                   style={{ width: `${progress}%` }}
                 >
                   {progress > 10 && `${progress.toFixed(0)}%`} {/* Only show percentage if bar is wide enough */}
@@ -180,7 +180,7 @@ function Loans() {
                   <input
                     type="number"
                     placeholder="Enter amount to lend (min $25)"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-afrilend-green"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-candlelend-green"
                     min="25"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
@@ -190,7 +190,7 @@ function Loans() {
                   <input
                     type="email"
                     placeholder="Your email"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-afrilend-green"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-candlelend-green"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading || loan.status === 'funded'}
@@ -198,7 +198,7 @@ function Loans() {
                   />
                   <button
                     type="submit"
-                    className={`w-full bg-afrilend-green text-white py-2 rounded-lg hover:bg-afrilend-yellow hover:text-afrilend-green transition ${loading || loan.status === 'funded' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-full bg-candlelend-green text-white py-2 rounded-lg hover:bg-candlelend-yellow hover:text-candlelend-green transition ${loading || loan.status === 'funded' ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={loading || loan.status === 'funded'}
                   >
                     {loading ? 'Processing...' : loan.status === 'funded' ? 'Loan Fully Funded' : `Lend to ${loan.name}`}
@@ -208,7 +208,7 @@ function Loans() {
                 <p className="mt-4 text-center text-gray-600">Log in as a lender to support this loan.</p>
               )}
               {submitted && (
-                <p className="mt-4 text-afrilend-green text-center">
+                <p className="mt-4 text-candlelend-green text-center">
                   Thank you for supporting {loan.name}! Your balance has been updated.
                 </p>
               )}
