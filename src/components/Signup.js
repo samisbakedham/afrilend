@@ -62,7 +62,7 @@ function Signup() {
       });
       if (error) throw error;
       // After successful Google login, Supabase will redirect to the specified URL
-      // On redirect, ensure profile is created in the auth.users table trigger
+      // The trigger will handle profile creation
     } catch (err) {
       console.error('Google login error:', err.message);
       setError(err.message || 'An unexpected error occurred.');
