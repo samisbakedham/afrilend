@@ -434,14 +434,8 @@ function Profile() {
               />
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h3 className="text-lg font-medium text-kiva-text mb-4">Manage Funds</h3>
-                <div
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px] overflow-auto"
-                  style={{ border: '2px solid red', position: 'relative' }}
-                >
-                  <form
-                    className="space-y-4"
-                    style={{ border: '1px solid blue', minHeight: '150px', backgroundColor: '#f0f0f0' }}
-                  >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[200px] overflow-visible">
+                  <form className="space-y-4 bg-gray-100 p-4 rounded-lg">
                     <input
                       type="number"
                       placeholder="Deposit amount"
@@ -458,17 +452,11 @@ function Profile() {
                       onClick={handleDeposit}
                       className={`w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       disabled={loading}
-                      style={{ display: 'block !important', visibility: 'visible !important' }} // Force visibility
                     >
                       {loading ? 'Processing...' : 'Deposit'}
                     </button>
-                    <div className="text-red-600">Debug: Deposit Form Rendered</div>
                   </form>
-                  <form
-                    onSubmit={handleWithdrawal}
-                    className="space-y-4"
-                    style={{ border: '1px solid blue', minHeight: '150px', backgroundColor: '#f0f0f0' }}
-                  >
+                  <form onSubmit={handleWithdrawal} className="space-y-4 bg-gray-100 p-4 rounded-lg">
                     <input
                       type="number"
                       placeholder="Withdrawal amount"
@@ -484,11 +472,9 @@ function Profile() {
                       type="submit"
                       className={`w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       disabled={loading || !wallet?.balance || wallet.balance === 0}
-                      style={{ display: 'block !important', visibility: 'visible !important' }} // Force visibility
                     >
                       {loading ? 'Processing...' : 'Withdraw'}
                     </button>
-                    <div className="text-red-600">Debug: Withdraw Form Rendered</div>
                   </form>
                 </div>
               </div>
