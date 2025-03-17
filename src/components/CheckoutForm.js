@@ -60,8 +60,8 @@ function CheckoutForm({ amount, setAmount, onDeposit, loading, setLoading }) {
         mode: 'payment',
         amount: amount * 100,
         currency: 'usd',
-        successUrl: 'https://candlelend.vercel.app/profile?success=true',
-        cancelUrl: 'https://candlelend.vercel.app/profile?cancelled=true',
+        successUrl: 'https://candle-labs.com/profile?success=true',
+        cancelUrl: 'https://candle-labs.com/profile?cancelled=true',
         clientReferenceId: localStorage.getItem('user_id'),
         paymentIntentClientSecret: clientSecret,
       });

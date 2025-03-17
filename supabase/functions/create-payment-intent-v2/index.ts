@@ -10,7 +10,7 @@ console.log('Starting create-payment-intent-v2 function...');
 // Whitelist of allowed origins
 const allowedOrigins = [
   'http://localhost:3000', // Development
-  'https://candlelend.vercel.app', // Vercel deployment
+  'https://candle-labs.com', // Vercel deployment
 ];
 
 serve(async (req) => {

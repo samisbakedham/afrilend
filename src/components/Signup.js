@@ -57,7 +57,7 @@ function Signup() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://candlelend.vercel.app/profile',
+          redirectTo: 'https://candle-labs.com/profile',
         },
       });
       if (error) throw error;
