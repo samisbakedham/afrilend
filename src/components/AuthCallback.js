@@ -13,6 +13,14 @@ function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // Extract session from URL hash (Supabase OAuth returns token in hash)
+        const hash = window.location.hash;
+        console.log('URL hash:', hash);
+        if (hash) {
+          supabase.auth.handleAuthResponse({ hash: window.location.hash });
+          console.log('Session set from hash:', hash);
+        }
+
         const attemptSessionRetrieval = async () => {
           const { data, error: sessionError } = await supabase.auth.getSession();
           if (sessionError) {

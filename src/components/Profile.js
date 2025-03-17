@@ -25,121 +25,142 @@ function Profile() {
     const getUserData = async () => {
       try {
         setLoading(true);
-        console.log('Fetching session...');
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) {
-          console.error('Session error:', sessionError.message);
-          throw new Error('Failed to fetch session: ' + sessionError.message);
-        }
-        if (!sessionData.session) {
-          console.error('No session found.');
-          throw new Error('No active session. Please log in again.');
-        }
+        let retryCount = 0;
+        const maxRetries = 3;
+        const retryDelay = 1000;
 
-        console.log('Fetching user data...');
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) {
-          console.error('Authentication error:', authError?.message || 'No user logged in');
-          throw new Error('Please log in to view your profile.');
-        }
-        setUser(user);
-        localStorage.setItem('user_id', user.id);
-        if (sessionData.session) {
-          localStorage.setItem('supabase_access_token', sessionData.session.access_token);
-        }
-        console.log('User fetched:', user);
-
-        console.log('Fetching profile data...');
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('role, loan_application_status, total_loans_funded, borrowers_impacted, profile_picture, bio, name')
-          .eq('id', user.id)
-          .single();
-        if (profileError) {
-          console.error('Error fetching profile:', profileError.message);
-          throw new Error('Failed to load profile data: ' + profileError.message);
-        }
-        setProfile(profileData);
-        console.log('Profile data:', profileData);
-
-        if (profileData?.role === 'lender') {
-          console.log('Fetching wallet data...');
-          const { data: walletData, error: walletError } = await supabase
-            .from('wallets')
-            .select('balance')
-            .eq('id', user.id)
-            .single();
-          if (walletError) {
-            console.error('Error fetching wallet:', walletError.message);
-            throw new Error('Failed to load wallet data: ' + walletError.message);
+        const attemptUserData = async () => {
+          console.log('Fetching session...');
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) {
+            console.error('Session error:', sessionError.message);
+            throw new Error('Failed to fetch session: ' + sessionError.message);
           }
-          setWallet(walletData || { balance: 0 });
-          console.log('Wallet data fetched:', walletData);
-
-          console.log('Fetching loan supports for total funded and lending history...');
-          const { data: supports, error: supportError } = await supabase
-            .from('loan_supports')
-            .select('amount, created_at')
-            .eq('user_id', user.id)
-            .eq('status', 'pending');
-          if (supportError) {
-            console.error('Error fetching loan supports:', supportError.message);
-            setTotalFunded(0);
-            setLendingHistory([]);
-          } else {
-            const total = supports ? supports.reduce((sum, support) => sum + support.amount, 0) : 0;
-            setTotalFunded(total);
-            console.log('Total funded:', total);
-
-            const history = supports.map(support => ({
-              date: new Date(support.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-              amount: support.amount / 100,
-            }));
-            setLendingHistory(history);
-            console.log('Lending history:', history);
+          if (!sessionData.session) {
+            console.error('No session found.');
+            throw new Error('No active session. Please log in again.');
           }
-        } else if (profileData?.role === 'borrower') {
-          console.log('Fetching borrower email data...');
-          const { data: emailData, error: emailError } = await supabase
+
+          console.log('Fetching user data...');
+          const { data: { user }, error: authError } = await supabase.auth.getUser();
+          if (authError || !user) {
+            console.error('Authentication error:', authError?.message || 'No user logged in');
+            throw new Error('Please log in to view your profile.');
+          }
+          setUser(user);
+          localStorage.setItem('user_id', user.id);
+          if (sessionData.session) {
+            localStorage.setItem('supabase_access_token', sessionData.session.access_token);
+          }
+          console.log('User fetched:', user);
+
+          console.log('Fetching profile data...');
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .select('email')
+            .select('role, loan_application_status, total_loans_funded, borrowers_impacted, profile_picture, bio, name')
             .eq('id', user.id)
             .single();
-          if (emailError) {
-            console.error('Error fetching borrower email:', emailError.message);
-            throw new Error('Failed to load borrower email: ' + emailError.message);
+          if (profileError) {
+            console.error('Error fetching profile:', profileError.message);
+            throw new Error('Failed to load profile data: ' + profileError.message);
           }
-          console.log('Borrower email:', emailData);
+          setProfile(profileData);
+          console.log('Profile data:', profileData);
 
-          console.log('Fetching borrower loans...');
-          const { data: loansData, error: loansError } = await supabase
-            .from('loans')
-            .select('*')
-            .eq('name', emailData.email.split('@')[0]);
-          if (loansError) {
-            console.error('Error fetching borrower loans:', loansError.message);
-            throw new Error('Failed to load borrower loans: ' + loansError.message);
-          }
-          setLoans(loansData || []);
-          console.log('Borrower loans:', loansData);
+          if (profileData?.role === 'lender') {
+            console.log('Fetching wallet data...');
+            const { data: walletData, error: walletError } = await supabase
+              .from('wallets')
+              .select('balance')
+              .eq('id', user.id)
+              .single();
+            if (walletError) {
+              console.error('Error fetching wallet:', walletError.message);
+              throw new Error('Failed to load wallet data: ' + walletError.message);
+            }
+            setWallet(walletData || { balance: 0 });
+            console.log('Wallet data fetched:', walletData);
 
-          const fundedData = {};
-          for (const loan of loansData || []) {
+            console.log('Fetching loan supports for total funded and lending history...');
             const { data: supports, error: supportError } = await supabase
               .from('loan_supports')
-              .select('amount')
-              .eq('loan_id', loan.id)
+              .select('amount, created_at')
+              .eq('user_id', user.id)
               .eq('status', 'pending');
             if (supportError) {
-              console.error('Error fetching loan supports for borrower:', supportError.message);
-              fundedData[loan.id] = 0;
-              continue;
+              console.error('Error fetching loan supports:', supportError.message);
+              setTotalFunded(0);
+              setLendingHistory([]);
+            } else {
+              const total = supports ? supports.reduce((sum, support) => sum + support.amount, 0) : 0;
+              setTotalFunded(total);
+              console.log('Total funded:', total);
+
+              const history = supports.map(support => ({
+                date: new Date(support.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                amount: support.amount / 100,
+              }));
+              setLendingHistory(history);
+              console.log('Lending history:', history);
             }
-            const totalFunded = supports ? supports.reduce((sum, support) => sum + support.amount, 0) : 0;
-            fundedData[loan.id] = totalFunded;
+          } else if (profileData?.role === 'borrower') {
+            console.log('Fetching borrower email data...');
+            const { data: emailData, error: emailError } = await supabase
+              .from('profiles')
+              .select('email')
+              .eq('id', user.id)
+              .single();
+            if (emailError) {
+              console.error('Error fetching borrower email:', emailError.message);
+              throw new Error('Failed to load borrower email: ' + emailError.message);
+            }
+            console.log('Borrower email:', emailData);
+
+            console.log('Fetching borrower loans...');
+            const { data: loansData, error: loansError } = await supabase
+              .from('loans')
+              .select('*')
+              .eq('name', emailData.email.split('@')[0]);
+            if (loansError) {
+              console.error('Error fetching borrower loans:', loansError.message);
+              throw new Error('Failed to load borrower loans: ' + loansError.message);
+            }
+            setLoans(loansData || []);
+            console.log('Borrower loans:', loansData);
+
+            const fundedData = {};
+            for (const loan of loansData || []) {
+              const { data: supports, error: supportError } = await supabase
+                .from('loan_supports')
+                .select('amount')
+                .eq('loan_id', loan.id)
+                .eq('status', 'pending');
+              if (supportError) {
+                console.error('Error fetching loan supports for borrower:', supportError.message);
+                fundedData[loan.id] = 0;
+                continue;
+              }
+              const totalFunded = supports ? supports.reduce((sum, support) => sum + support.amount, 0) : 0;
+              fundedData[loan.id] = totalFunded;
+            }
+            setFundedAmounts(fundedData);
+            console.log('Funded amounts for borrower loans:', fundedData);
           }
-          setFundedAmounts(fundedData);
-          console.log('Funded amounts for borrower loans:', fundedData);
+        };
+
+        while (retryCount < maxRetries) {
+          try {
+            await attemptUserData();
+            break;
+          } catch (err) {
+            if (retryCount < maxRetries - 1) {
+              console.log(`Retrying user data fetch (attempt ${retryCount + 1}/${maxRetries})...`);
+              await new Promise(resolve => setTimeout(resolve, retryDelay));
+            } else {
+              throw err;
+            }
+            retryCount++;
+          }
         }
       } catch (err) {
         console.error('Unexpected error in getUserData:', err.message);
