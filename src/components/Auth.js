@@ -88,10 +88,10 @@ function Auth() {
           </p>
         </div>
         {error && <p className="text-red-600 text-center mb-4">{error}</p>}
-        <div className="space-y-8">
+        <div className="space-y-6">
           <button
             onClick={handleGoogleLogin}
-            className="w-full bg-white text-gray-900 py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-100 transition flex items-center justify-center space-x-3"
+            className="w-full bg-white text-gray-900 py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-100 transition flex items-center justify-center space-x-2"
             disabled={loading}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -112,12 +112,14 @@ function Auth() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            <span>{loading ? 'Processing...' : 'Sign in with Google'}</span>
+            <span className="text-base font-medium">
+              {loading ? 'Processing...' : 'Sign in with Google'}
+            </span>
           </button>
           <div className="flex items-center justify-center space-x-4">
-            <hr className="w-1/4 border-gray-300" />
+            <hr className="w-1/3 border-gray-300" />
             <span className="text-sm text-gray-600">or</span>
-            <hr className="w-1/4 border-gray-300" />
+            <hr className="w-1/3 border-gray-300" />
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -186,7 +188,7 @@ function Auth() {
             >
               {loading ? 'Processing...' : isLogin ? 'Log In' : 'Sign Up'}
             </button>
-            <p className="text-center text-sm text-gray-600">
+            <p className="text-center text-sm text-gray-600 mt-4">
               {isLogin ? 'Don’t have an account?' : 'Already have an account?'}{' '}
               <button
                 type="button"
