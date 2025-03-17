@@ -79,7 +79,7 @@ serve(async (req) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Wallet Deposit for AfriLend',
+              name: 'Wallet Deposit for CandleLend',
             },
             unit_amount: amount, // Amount in cents
           },

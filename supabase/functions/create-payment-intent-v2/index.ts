@@ -75,7 +75,7 @@ serve(async (req) => {
       amount: amount,
       currency: 'usd',
       payment_method_types: ['card'],
-      description: 'Wallet Deposit for AfriLend',
+      description: 'Wallet Deposit for CandleLend',
     });
 
     console.log('Payment Intent created:', paymentIntent);

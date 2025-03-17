@@ -81,7 +81,7 @@ serve(async (req) => {
       amount: amount,
       currency: 'usd',
       payment_method_types: ['card'],
-      description: 'Wallet Deposit for AfriLend',
+      description: 'Wallet Deposit for CandleLend',
     });
 
     return new Response(JSON.stringify({ client_secret: paymentIntent.client_secret }), {

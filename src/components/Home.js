@@ -30,7 +30,7 @@ function Home() {
             Empower Africa’s Future
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            AfriLend connects compassionate lenders with African entrepreneurs, offering microloans starting at $25. Choose your interest rate, support local growth, and create lasting impact across the continent.
+            CandleLend connects compassionate lenders with African entrepreneurs, offering microloans starting at $25. Choose your interest rate, support local growth, and create lasting impact across the continent.
           </p>
           <Link
             to="/loans"
@@ -42,15 +42,15 @@ function Home() {
         </div>
       </section>
 
-      {/* About AfriLend Section */}
+      {/* About CandleLend Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto">
           <h2 className="text-4xl font-heading font-bold text-center mb-12 text-candlelend-green animate-fade-in">
-            About AfriLend
+            About CandleLend
           </h2>
           <div className="max-w-4xl mx-auto text-center text-lg text-gray-700">
             <p className="mb-4">
-              Founded in 2023, AfriLend is a platform dedicated to empowering African entrepreneurs by providing accessible microloans. We partner with local communities to identify hardworking individuals with viable business ideas, helping them overcome financial barriers to success.
+              Founded in 2023, CandleLend is a platform dedicated to empowering African entrepreneurs by providing accessible microloans. We partner with local communities to identify hardworking individuals with viable business ideas, helping them overcome financial barriers to success.
             </p>
             <p className="mb-4">
               Our mission is to foster economic growth, reduce poverty, and promote sustainable development. With a 95% repayment rate, your investment is both impactful and secure.
@@ -131,7 +131,7 @@ function Home() {
           </h2>
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-lg text-gray-700 italic mb-4">
-              "Lending through AfriLend was a life-changing experience. Seeing Amina grow her business brought me so much joy!" - Jane D., USA
+              "Lending through CandleLend was a life-changing experience. Seeing Amina grow her business brought me so much joy!" - Jane D., USA
             </p>
             <p className="text-lg text-gray-700 italic">
               "I love how easy it is to support entrepreneurs like Kwame. The impact is real!" - Mark T., Canada
@@ -143,7 +143,7 @@ function Home() {
       {/* Footer */}
       <footer className="bg-candlelend-green text-white py-8">
         <div className="container mx-auto text-center">
-          <p className="text-lg">© 2025 AfriLend. All rights reserved.</p>
+          <p className="text-lg">© 2025 CandleLend. All rights reserved.</p>
           <div className="mt-4 space-x-6">
             <a href="#" className="hover:text-candlelend-yellow transition">About Us</a>
             <a href="#" className="hover:text-candlelend-yellow transition">Contact</a>

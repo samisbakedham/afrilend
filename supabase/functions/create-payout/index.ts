@@ -72,7 +72,7 @@ serve(async (req) => {
       amount: amount, // Amount in cents
       currency: 'usd',
       destination: 'ba_1NZZlJ2eZvKYlo2C0sL1x2pQ', // Replace with the user's bank account ID (Stripe Connected Account)
-      description: `Withdrawal for AfriLend user ${user_id}`,
+      description: `Withdrawal for CandleLend user ${user_id}`,
     });
 
     console.log('Payout created:', payout);

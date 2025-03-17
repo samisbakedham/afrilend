@@ -29,7 +29,7 @@ function Nav() {
   return (
     <nav className="bg-candlelend-green text-white p-4 sticky top-0 shadow-md z-10">
       <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="text-2xl font-heading font-bold">AfriLend</Link>
+        <Link to="/" className="text-2xl font-heading font-bold">CandleLend</Link>
         <div className="space-x-6">
           <Link to="/" className="hover:text-candlelend-yellow transition">Home</Link>
           <Link to="/loans" className="hover:text-candlelend-yellow transition">Browse Loans</Link>
