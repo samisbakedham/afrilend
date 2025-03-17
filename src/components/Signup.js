@@ -51,18 +51,20 @@ function Signup() {
     }
   };
 
-  const handleSocialLogin = async (provider) => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
         options: {
           redirectTo: 'https://afrilend.vercel.app/profile',
         },
       });
       if (error) throw error;
+      // After successful Google login, Supabase will redirect to the specified URL
+      // On redirect, ensure profile is created in the auth.users table trigger
     } catch (err) {
-      console.error('Social login error:', err.message);
+      console.error('Google login error:', err.message);
       setError(err.message || 'An unexpected error occurred.');
       toast.error(err.message || 'An unexpected error occurred.');
     } finally {
@@ -112,14 +114,7 @@ function Signup() {
             <p className="text-sm text-gray-600">Or sign up with:</p>
             <div className="flex justify-center space-x-4 mt-2">
               <button
-                onClick={() => handleSocialLogin('apple')}
-                className="bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition"
-                disabled={loading}
-              >
-                {loading ? 'Processing...' : 'Apple'}
-              </button>
-              <button
-                onClick={() => handleSocialLogin('google')}
+                onClick={handleGoogleLogin}
                 className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition"
                 disabled={loading}
               >

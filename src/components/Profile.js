@@ -379,51 +379,61 @@ function Profile() {
   console.log('Rendering Profile with state:', { user, profile, wallet, loans, error, loading, success, depositAmount });
 
   if (error) return <p className="container mx-auto py-16 text-center text-red-600">{error}</p>;
-  if (!user) return <p className="container mx-auto py-16 text-center">Please log in to view your profile.</p>;
+  if (!user) return (
+    <div className="container mx-auto py-16 text-center">
+      <p>Please log in to view your profile.</p>
+      <button
+        onClick={() => navigate('/signup')}
+        className="mt-4 bg-kiva-green text-white py-2 px-4 rounded-lg hover:bg-kiva-light-green transition"
+      >
+        Sign Up
+      </button>
+    </div>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto bg-kiva-bg p-8">
-      <h2 className="text-4xl font-bold text-kiva-green mb-8 text-center">My Profile</h2>
+    <div className="max-w-4xl mx-auto bg-kiva-bg p-10">
+      <h2 className="text-4xl font-bold text-kiva-green mb-10 text-center">My Profile</h2>
       {profile ? (
         <>
           {profile.role === 'lender' && wallet ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  <div className="flex items-center space-x-4">
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-white p-8 rounded-lg shadow-md">
+                  <div className="flex items-center space-x-6">
                     {profile.profile_picture && (
                       <img
                         src={profile.profile_picture}
                         alt="Profile"
-                        className="w-16 h-16 rounded-full border-2 border-kiva-green"
+                        className="w-20 h-20 rounded-full border-2 border-kiva-green"
                       />
                     )}
                     <div>
-                      <h3 className="text-xl font-semibold text-kiva-text">Welcome, {profile.name || 'Lender'}!</h3>
-                      {profile.bio && <p className="text-sm text-gray-600 mt-1">{profile.bio}</p>}
+                      <h3 className="text-2xl font-semibold text-kiva-text">Welcome, {profile.name || 'Lender'}!</h3>
+                      {profile.bio && <p className="text-base text-gray-600 mt-2">{profile.bio}</p>}
                     </div>
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-lg font-medium text-kiva-text mb-2">Wallet Overview</h3>
-                  <p className="text-2xl font-bold text-kiva-green">${wallet.balance.toFixed(2)}</p>
-                  <p className="text-sm text-gray-600">Available Balance</p>
+                <div className="bg-white p-8 rounded-lg shadow-md">
+                  <h3 className="text-lg font-medium text-kiva-text mb-4">Wallet Overview</h3>
+                  <p className="text-3xl font-bold text-kiva-green">${wallet.balance.toFixed(2)}</p>
+                  <p className="text-base text-gray-600">Available Balance</p>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-medium text-kiva-text mb-4">Your Impact</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div className="bg-white p-8 rounded-lg shadow-md">
+                <h3 className="text-lg font-medium text-kiva-text mb-6">Your Impact</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                   <div>
-                    <p className="text-2xl font-bold text-kiva-green">${totalFunded.toFixed(2)}</p>
-                    <p className="text-sm text-gray-600">Total Funded</p>
+                    <p className="text-3xl font-bold text-kiva-green">${totalFunded.toFixed(2)}</p>
+                    <p className="text-base text-gray-600">Total Funded</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-kiva-green">{profile.total_loans_funded || 0}</p>
-                    <p className="text-sm text-gray-600">Loans Funded</p>
+                    <p className="text-3xl font-bold text-kiva-green">{profile.total_loans_funded || 0}</p>
+                    <p className="text-base text-gray-600">Loans Funded</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-kiva-green">{profile.borrowers_impacted || 0}</p>
-                    <p className="text-sm text-gray-600">Borrowers Impacted</p>
+                    <p className="text-3xl font-bold text-kiva-green">{profile.borrowers_impacted || 0}</p>
+                    <p className="text-base text-gray-600">Borrowers Impacted</p>
                   </div>
                 </div>
               </div>
@@ -432,14 +442,20 @@ function Profile() {
                 profile={profile}
                 onUpdate={(updatedProfile) => setProfile({ ...profile, ...updatedProfile })}
               />
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-medium text-kiva-text mb-4">Manage Funds</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[200px] overflow-visible">
-                  <form className="space-y-4 bg-gray-100 p-4 rounded-lg">
+              <div className="bg-white p-8 rounded-lg shadow-md">
+                <h3 className="text-lg font-medium text-kiva-text mb-6">Manage Funds</h3>
+                <div
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[400px] overflow-auto"
+                  style={{ position: 'relative' }}
+                >
+                  <form
+                    className="space-y-6"
+                    style={{ minHeight: '200px', backgroundColor: '#f0f0f0' }}
+                  >
                     <input
                       type="number"
                       placeholder="Deposit amount"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-kiva-green"
+                      className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-kiva-green text-lg"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
                       min="1"
@@ -450,17 +466,22 @@ function Profile() {
                     <button
                       type="button"
                       onClick={handleDeposit}
-                      className={`w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`w-full bg-kiva-green text-white py-3 rounded-lg hover:bg-kiva-light-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       disabled={loading}
+                      style={{ display: 'block !important', visibility: 'visible !important', opacity: 1 }}
                     >
                       {loading ? 'Processing...' : 'Deposit'}
                     </button>
                   </form>
-                  <form onSubmit={handleWithdrawal} className="space-y-4 bg-gray-100 p-4 rounded-lg">
+                  <form
+                    onSubmit={handleWithdrawal}
+                    className="space-y-6"
+                    style={{ minHeight: '200px', backgroundColor: '#f0f0f0' }}
+                  >
                     <input
                       type="number"
                       placeholder="Withdrawal amount"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-kiva-green"
+                      className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-kiva-green text-lg"
                       value={withdrawalAmount}
                       onChange={(e) => setWithdrawalAmount(e.target.value)}
                       min="1"
@@ -470,34 +491,35 @@ function Profile() {
                     />
                     <button
                       type="submit"
-                      className={`w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`w-full bg-kiva-green text-white py-3 rounded-lg hover:bg-kiva-light-green transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       disabled={loading || !wallet?.balance || wallet.balance === 0}
+                      style={{ display: 'block !important', visibility: 'visible !important', opacity: 1 }}
                     >
                       {loading ? 'Processing...' : 'Withdraw'}
                     </button>
                   </form>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-md mt-6">
-                <h3 className="text-lg font-medium text-kiva-text mb-4">Lending History</h3>
+              <div className="bg-white p-8 rounded-lg shadow-md mt-8">
+                <h3 className="text-lg font-medium text-kiva-text mb-6">Lending History</h3>
                 <LendingHistory userId={user.id} />
               </div>
               <div className="space-y-4">
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+                  className="w-full bg-kiva-green text-white py-3 rounded-lg hover:bg-kiva-light-green transition text-lg"
                 >
                   View Dashboard
                 </button>
                 <button
                   onClick={() => navigate('/users')}
-                  className="w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+                  className="w-full bg-kiva-green text-white py-3 rounded-lg hover:bg-kiva-light-green transition text-lg"
                 >
                   View Community
                 </button>
                 <button
                   onClick={() => navigate('/loans')}
-                  className="w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+                  className="w-full bg-kiva-green text-white py-3 rounded-lg hover:bg-kiva-light-green transition text-lg"
                 >
                   Fund a Loan
                 </button>
@@ -505,26 +527,26 @@ function Profile() {
             </div>
           ) : profile.role === 'borrower' ? (
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl p-6 border border-gray-200 transform hover:scale-105 transition duration-300">
-              <h3 className="text-2xl font-semibold text-kiva-green mb-4 text-center">Borrower Dashboard</h3>
-              <p className="text-gray-600 mb-4 text-center">Application Status: {profile.loan_application_status || 'Not applied'}</p>
+              <h3 className="text-2xl font-semibold text-kiva-green mb-6 text-center">Borrower Dashboard</h3>
+              <p className="text-base text-gray-600 mb-6 text-center">Application Status: {profile.loan_application_status || 'Not applied'}</p>
               {loans.length > 0 ? (
                 <div className="mb-6">
-                  <h4 className="text-xl font-semibold mb-2 text-center">Your Loan Requests</h4>
+                  <h4 className="text-xl font-semibold mb-4 text-center">Your Loan Requests</h4>
                   {loans.map(loan => (
-                    <div key={loan.id} className="p-4 mb-2 bg-gray-50 rounded-lg text-center">
-                      <p>Amount: ${loan.amount}</p>
-                      <p>Purpose: {loan.purpose}</p>
-                      <p>Status: {loan.status}</p>
-                      <p>Funded: ${(fundedAmounts[loan.id] || 0).toFixed(2)}</p>
+                    <div key={loan.id} className="p-4 mb-4 bg-gray-50 rounded-lg text-center">
+                      <p className="text-base">Amount: ${loan.amount}</p>
+                      <p className="text-base">Purpose: {loan.purpose}</p>
+                      <p className="text-base">Status: {loan.status}</p>
+                      <p className="text-base">Funded: ${(fundedAmounts[loan.id] || 0).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-600 mb-6 text-center">No loan requests submitted yet.</p>
+                <p className="text-base text-gray-600 mb-6 text-center">No loan requests submitted yet.</p>
               )}
               <button
                 onClick={() => navigate('/apply-loan')}
-                className="w-full bg-kiva-green text-white py-2 rounded-lg hover:bg-kiva-light-green transition"
+                className="w-full bg-kiva-green text-white py-3 rounded-lg hover:bg-kiva-light-green transition text-lg"
               >
                 Apply for a Loan
               </button>
@@ -534,7 +556,15 @@ function Profile() {
           )}
         </>
       ) : (
-        <p className="text-center">Loading profile...</p>
+        <div className="container mx-auto py-16 text-center">
+          <p>Please log in to view your profile.</p>
+          <button
+            onClick={() => navigate('/signup')}
+            className="mt-4 bg-kiva-green text-white py-2 px-4 rounded-lg hover:bg-kiva-light-green transition"
+          >
+            Sign Up
+          </button>
+        </div>
       )}
     </div>
   );
