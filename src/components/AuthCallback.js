@@ -6,33 +6,56 @@ import { toast } from 'react-toastify';
 function AuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
+  const retryDelay = 1000; // 1 second delay between retries
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        const { data, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) {
-          console.error('Session error:', sessionError.message);
-          throw new Error(sessionError.message || 'Failed to fetch session.');
-        }
-        if (data.session) {
-          console.log('Session retrieved successfully:', data.session);
-          toast.success('Successfully signed in with Google!');
-          navigate('/profile');
-        } else {
-          console.error('No session found after OAuth redirect.');
-          throw new Error('No session found. Please try again.');
-        }
+        const attemptSessionRetrieval = async () => {
+          const { data, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) {
+            console.error('Session error:', sessionError.message);
+            throw new Error(sessionError.message || 'Failed to fetch session.');
+          }
+          if (data.session) {
+            console.log('Session retrieved successfully:', data.session);
+            toast.success('Successfully signed in with Google!');
+            navigate('/profile', { replace: true });
+          } else {
+            console.error('No session found after OAuth redirect.');
+            throw new Error('No session found. Please try again.');
+          }
+        };
+
+        const retrySession = async () => {
+          try {
+            await attemptSessionRetrieval();
+          } catch (err) {
+            if (retryCount < maxRetries) {
+              console.log(`Retrying session retrieval (attempt ${retryCount + 1}/${maxRetries})...`);
+              setTimeout(() => {
+                setRetryCount(retryCount + 1);
+              }, retryDelay);
+            } else {
+              console.error('Max retries reached. Session retrieval failed.');
+              throw err;
+            }
+          }
+        };
+
+        await retrySession();
       } catch (err) {
         console.error('Auth callback error:', err.message);
         setError(err.message || 'An unexpected error occurred during authentication.');
         toast.error(err.message || 'An unexpected error occurred during authentication.');
-        navigate('/auth');
+        navigate('/auth', { replace: true });
       }
     };
 
     handleAuthCallback();
-  }, [navigate]);
+  }, [navigate, retryCount]);
 
   if (error) {
     return (

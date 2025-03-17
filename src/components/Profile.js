@@ -16,7 +16,7 @@ function Profile() {
   const [totalFunded, setTotalFunded] = useState(0);
   const [lendingHistory, setLendingHistory] = useState([]);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
@@ -25,6 +25,17 @@ function Profile() {
     const getUserData = async () => {
       try {
         setLoading(true);
+        console.log('Fetching session...');
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error('Session error:', sessionError.message);
+          throw new Error('Failed to fetch session: ' + sessionError.message);
+        }
+        if (!sessionData.session) {
+          console.error('No session found.');
+          throw new Error('No active session. Please log in again.');
+        }
+
         console.log('Fetching user data...');
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
@@ -33,9 +44,8 @@ function Profile() {
         }
         setUser(user);
         localStorage.setItem('user_id', user.id);
-        const session = await supabase.auth.getSession();
-        if (session.data.session) {
-          localStorage.setItem('supabase_access_token', session.data.session.access_token);
+        if (sessionData.session) {
+          localStorage.setItem('supabase_access_token', sessionData.session.access_token);
         }
         console.log('User fetched:', user);
 
