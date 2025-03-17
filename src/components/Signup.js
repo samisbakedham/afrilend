@@ -57,7 +57,7 @@ function Signup() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://candle-labs.com/profile',
+          redirectTo: 'https://candle-labs.com/profile', // Updated to new domain
         },
       });
       if (error) throw error;
