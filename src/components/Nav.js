@@ -23,7 +23,7 @@ function Nav() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    navigate('/login');
+    navigate('/auth'); // Redirect to /auth after logout instead of /login
   };
 
   return (
@@ -34,10 +34,9 @@ function Nav() {
           <Link to="/" className="hover:text-candlelend-yellow transition">Home</Link>
           <Link to="/loans" className="hover:text-candlelend-yellow transition">Browse Loans</Link>
           {!user && (
-            <>
-              <Link to="/login" className="hover:text-candlelend-yellow transition">Login</Link>
-              <Link to="/signup" className="hover:text-candlelend-yellow transition">Sign Up</Link>
-            </>
+            <Link to="/auth" className="hover:text-candlelend-yellow transition">
+              Sign In
+            </Link>
           )}
           {user && (
             <>
