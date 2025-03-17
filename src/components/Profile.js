@@ -16,22 +16,20 @@ function Profile() {
   const [totalFunded, setTotalFunded] = useState(0);
   const [lendingHistory, setLendingHistory] = useState([]);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Added loading state
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
-  // Fetch user data
   useEffect(() => {
     console.log('Profile.js: useEffect triggered for user data');
     const getUserData = async () => {
       try {
+        setLoading(true);
         console.log('Fetching user data...');
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
           console.error('Authentication error:', authError?.message || 'No user logged in');
-          setError('Please log in to view your profile.');
-          navigate('/login');
-          return;
+          throw new Error('Please log in to view your profile.');
         }
         setUser(user);
         localStorage.setItem('user_id', user.id);
@@ -49,8 +47,7 @@ function Profile() {
           .single();
         if (profileError) {
           console.error('Error fetching profile:', profileError.message);
-          setError('Failed to load profile data.');
-          return;
+          throw new Error('Failed to load profile data: ' + profileError.message);
         }
         setProfile(profileData);
         console.log('Profile data:', profileData);
@@ -64,8 +61,7 @@ function Profile() {
             .single();
           if (walletError) {
             console.error('Error fetching wallet:', walletError.message);
-            setError('Failed to load wallet data.');
-            return;
+            throw new Error('Failed to load wallet data: ' + walletError.message);
           }
           setWallet(walletData || { balance: 0 });
           console.log('Wallet data fetched:', walletData);
@@ -101,8 +97,7 @@ function Profile() {
             .single();
           if (emailError) {
             console.error('Error fetching borrower email:', emailError.message);
-            setError('Failed to load borrower email.');
-            return;
+            throw new Error('Failed to load borrower email: ' + emailError.message);
           }
           console.log('Borrower email:', emailData);
 
@@ -113,8 +108,7 @@ function Profile() {
             .eq('name', emailData.email.split('@')[0]);
           if (loansError) {
             console.error('Error fetching borrower loans:', loansError.message);
-            setError('Failed to load borrower loans.');
-            return;
+            throw new Error('Failed to load borrower loans: ' + loansError.message);
           }
           setLoans(loansData || []);
           console.log('Borrower loans:', loansData);
@@ -139,13 +133,16 @@ function Profile() {
         }
       } catch (err) {
         console.error('Unexpected error in getUserData:', err.message);
-        setError('An unexpected error occurred. Please try again.');
+        setError(err.message || 'An unexpected error occurred. Please try again.');
+        toast.error(err.message || 'An unexpected error occurred. Please try again.');
+        navigate('/auth');
+      } finally {
+        setLoading(false);
       }
     };
     getUserData();
   }, [navigate]);
 
-  // Handle payment success redirect
   useEffect(() => {
     console.log('Profile.js: useEffect triggered for redirect handling');
     const urlParams = new URLSearchParams(window.location.search);
@@ -378,18 +375,42 @@ function Profile() {
 
   console.log('Rendering Profile with state:', { user, profile, wallet, loans, error, loading, success, depositAmount });
 
-  if (error) return <p className="container mx-auto py-16 text-center text-red-600">{error}</p>;
-  if (!user) return (
-    <div className="container mx-auto py-16 text-center">
-      <p>Please log in to view your profile.</p>
-      <button
-        onClick={() => navigate('/signup')}
-        className="mt-4 bg-kiva-green text-white py-2 px-4 rounded-lg hover:bg-kiva-light-green transition"
-      >
-        Sign Up
-      </button>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto bg-kiva-bg p-8 mt-16 text-center">
+        <h2 className="text-2xl font-semibold text-kiva-green">Loading...</h2>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto bg-kiva-bg p-8 mt-16 text-center">
+        <h2 className="text-2xl font-semibold text-red-600">Error</h2>
+        <p className="mt-2 text-gray-600">{error}</p>
+        <button
+          onClick={() => navigate('/auth')}
+          className="mt-4 bg-kiva-green text-white py-2 px-4 rounded-lg hover:bg-kiva-light-green transition"
+        >
+          Return to Sign In
+        </button>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto py-16 text-center">
+        <p>Please log in to view your profile.</p>
+        <button
+          onClick={() => navigate('/auth')}
+          className="mt-4 bg-kiva-green text-white py-2 px-4 rounded-lg hover:bg-kiva-light-green transition"
+        >
+          Sign In
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto bg-kiva-bg p-10">
@@ -444,14 +465,8 @@ function Profile() {
               />
               <div className="bg-white p-8 rounded-lg shadow-md">
                 <h3 className="text-lg font-medium text-kiva-text mb-6">Manage Funds</h3>
-                <div
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[400px] overflow-auto"
-                  style={{ position: 'relative' }}
-                >
-                  <form
-                    className="space-y-6"
-                    style={{ minHeight: '200px', backgroundColor: '#f0f0f0' }}
-                  >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[400px] overflow-auto">
+                  <form className="space-y-6">
                     <input
                       type="number"
                       placeholder="Deposit amount"
@@ -473,11 +488,7 @@ function Profile() {
                       {loading ? 'Processing...' : 'Deposit'}
                     </button>
                   </form>
-                  <form
-                    onSubmit={handleWithdrawal}
-                    className="space-y-6"
-                    style={{ minHeight: '200px', backgroundColor: '#f0f0f0' }}
-                  >
+                  <form onSubmit={handleWithdrawal} className="space-y-6">
                     <input
                       type="number"
                       placeholder="Withdrawal amount"
@@ -556,15 +567,7 @@ function Profile() {
           )}
         </>
       ) : (
-        <div className="container mx-auto py-16 text-center">
-          <p>Please log in to view your profile.</p>
-          <button
-            onClick={() => navigate('/signup')}
-            className="mt-4 bg-kiva-green text-white py-2 px-4 rounded-lg hover:bg-kiva-light-green transition"
-          >
-            Sign Up
-          </button>
-        </div>
+        <p className="text-center">Loading profile...</p>
       )}
     </div>
   );
