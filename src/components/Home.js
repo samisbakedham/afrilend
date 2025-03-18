@@ -19,19 +19,23 @@ function Home() {
           console.error('Error fetching featured loans:', error.message);
           // Fallback to dummy data if Supabase fails
           setFeaturedLoans([
-            { id: 1, name: 'Amina', country: 'Kenya', amount: 300, purpose: 'Expand her shop', funded_amount: 0 },
-            { id: 2, name: 'Fatima', country: 'Nigeria', amount: 400, purpose: 'Start a bakery', funded_amount: 0 },
-            { id: 3, name: 'Joseph', country: 'Uganda', amount: 600, purpose: 'Expand his carpentry business', funded_amount: 0 },
+            { id: 1, name: 'Amina', country: 'Kenya', amount: 300, purpose: 'expand her shop', funded_amount: 0 },
+            { id: 2, name: 'Fatima', country: 'Nigeria', amount: 400, purpose: 'start a bakery', funded_amount: 0 },
+            { id: 3, name: 'Joseph', country: 'Uganda', amount: 600, purpose: 'expand his carpentry business', funded_amount: 0 },
           ]);
         } else {
-          setFeaturedLoans(data || []);
+          setFeaturedLoans(data.length > 0 ? data : [
+            { id: 1, name: 'Amina', country: 'Kenya', amount: 300, purpose: 'expand her shop', funded_amount: 0 },
+            { id: 2, name: 'Fatima', country: 'Nigeria', amount: 400, purpose: 'start a bakery', funded_amount: 0 },
+            { id: 3, name: 'Joseph', country: 'Uganda', amount: 600, purpose: 'expand his carpentry business', funded_amount: 0 },
+          ]);
         }
       } catch (err) {
         console.error('Unexpected error fetching loans:', err.message);
         setFeaturedLoans([
-          { id: 1, name: 'Amina', country: 'Kenya', amount: 300, purpose: 'Expand her shop', funded_amount: 0 },
-          { id: 2, name: 'Fatima', country: 'Nigeria', amount: 400, purpose: 'Start a bakery', funded_amount: 0 },
-          { id: 3, name: 'Joseph', country: 'Uganda', amount: 600, purpose: 'Expand his carpentry business', funded_amount: 0 },
+          { id: 1, name: 'Amina', country: 'Kenya', amount: 300, purpose: 'expand her shop', funded_amount: 0 },
+          { id: 2, name: 'Fatima', country: 'Nigeria', amount: 400, purpose: 'start a bakery', funded_amount: 0 },
+          { id: 3, name: 'Joseph', country: 'Uganda', amount: 600, purpose: 'expand his carpentry business', funded_amount: 0 },
         ]);
       }
     };
@@ -50,10 +54,10 @@ function Home() {
   };
 
   return (
-    <div className="font-sans text-gray-800" style={{ fontFamily: 'Roboto, sans-serif' }}>
+    <div className="font-sans text-gray-900">
       {/* Hero Section */}
-      <section className="relative bg-[rgb(34,56,41)] text-white py-24">
-        <div className="container mx-auto text-center relative z-10 px-4">
+      <section className="relative bg-kiva-dark-green text-white py-24">
+        <div className="container mx-auto text-center px-4">
           <motion.h1
             initial="hidden"
             animate="visible"
@@ -79,7 +83,7 @@ function Home() {
           >
             <Link
               to="/loans"
-              className="inline-block bg-[rgb(39,106,67)] text-white font-medium py-3 px-8 rounded-lg shadow-md hover:bg-[rgb(34,56,41)] transition duration-300"
+              className="inline-block bg-kiva-action-green text-white font-medium py-3 px-8 rounded-lg shadow-md hover:bg-kiva-dark-green transition duration-300"
             >
               Start Lending Now
             </Link>
@@ -88,22 +92,22 @@ function Home() {
       </section>
 
       {/* About CandleLend Section */}
-      <section className="py-16 bg-[rgb(237,244,241)]">
+      <section className="py-16 bg-kiva-light-gray">
         <div className="container mx-auto px-4">
           <motion.h2
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-3xl md:text-4xl font-semibold text-center mb-12 text-[rgb(34,56,41)]"
+            className="text-3xl md:text-4xl font-semibold text-center mb-12 text-kiva-dark-green"
           >
             About CandleLend
           </motion.h2>
           <div className="max-w-3xl mx-auto text-center">
-            <p className="text-lg text-gray-700 mb-6">
+            <p className="text-lg text-gray-900 mb-6">
               Founded in 2023, CandleLend empowers African entrepreneurs with accessible microloans. We partner with local communities to support hardworking individuals with viable business ideas.
             </p>
-            <p className="text-lg text-gray-700 mb-6">
+            <p className="text-lg text-gray-900 mb-6">
               Our mission is to foster economic growth and reduce poverty with a 95% repayment rate, ensuring your investment is impactful and secure.
             </p>
             <motion.div
@@ -115,7 +119,7 @@ function Home() {
             >
               <Link
                 to="/about"
-                className="inline-block bg-[rgb(39,106,67)] text-white py-2 px-6 rounded hover:bg-[rgb(34,56,41)] transition"
+                className="inline-block bg-kiva-action-green text-white py-2 px-6 rounded hover:bg-kiva-dark-green transition"
               >
                 Learn More
               </Link>
@@ -125,52 +129,40 @@ function Home() {
       </section>
 
       {/* Meet the Entrepreneurs Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-kiva-white">
         <div className="container mx-auto px-4">
           <motion.h2
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-3xl md:text-4xl font-semibold text-center mb-12 text-[rgb(34,56,41)]"
+            className="text-3xl md:text-4xl font-semibold text-center mb-12 text-kiva-dark-green"
           >
             Meet the Entrepreneurs
           </motion.h2>
-          {featuredLoans.length === 0 ? (
-            <motion.p
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeIn}
-              className="text-center text-gray-600"
-            >
-              No featured loans available at the moment.
-            </motion.p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {featuredLoans.map((loan, index) => (
-                <motion.div
-                  key={loan.id}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeInUp}
-                  transition={{ delay: 0.2 * (index + 1) }}
-                  className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {featuredLoans.map((loan, index) => (
+              <motion.div
+                key={loan.id}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeInUp}
+                transition={{ delay: 0.2 * (index + 1) }}
+                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300"
+              >
+                <h3 className="text-xl font-semibold text-kiva-action-green">{loan.name} - {loan.country}</h3>
+                <p className="text-gray-600 mt-2">Needs ${loan.amount} to {loan.purpose}</p>
+                <p className="text-sm text-gray-500 mt-2">Funded: ${loan.funded_amount || 0} / ${loan.amount}</p>
+                <Link
+                  to={`/loans/${loan.id}`}
+                  className="mt-4 inline-block bg-kiva-action-green text-white py-2 px-4 rounded hover:bg-kiva-dark-green transition"
                 >
-                  <h3 className="text-xl font-semibold text-[rgb(39,106,67)]">{loan.name} - {loan.country}</h3>
-                  <p className="text-gray-600 mt-2">Needs ${loan.amount} to {loan.purpose}</p>
-                  <p className="text-sm text-gray-500 mt-2">Funded: ${loan.funded_amount || 0} / ${loan.amount}</p>
-                  <Link
-                    to={`/loans/${loan.id}`}
-                    className="mt-4 inline-block bg-[rgb(39,106,67)] text-white py-2 px-4 rounded hover:bg-[rgb(34,56,41)] transition"
-                  >
-                    Support {loan.name}
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                  Support {loan.name}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -190,14 +182,14 @@ function Home() {
       </section>
 
       {/* Your Impact Section */}
-      <section className="py-16 bg-[rgb(237,244,241)]">
+      <section className="py-16 bg-kiva-light-gray">
         <div className="container mx-auto text-center px-4">
           <motion.h2
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-3xl md:text-4xl font-semibold mb-12 text-[rgb(34,56,41)]"
+            className="text-3xl md:text-4xl font-semibold mb-12 text-kiva-dark-green"
           >
             Your Impact
           </motion.h2>
@@ -210,8 +202,8 @@ function Home() {
               transition={{ delay: 0.2 }}
               className="flex flex-col items-center"
             >
-              <FaUsers className="text-5xl text-[rgb(39,106,67)] mb-4" />
-              <p className="text-5xl font-semibold text-[rgb(34,56,41)]">100+</p>
+              <FaUsers className="text-5xl text-kiva-action-green mb-4" />
+              <p className="text-5xl font-semibold text-kiva-dark-green">100+</p>
               <p className="text-lg text-gray-600 mt-2">Entrepreneurs Funded</p>
             </motion.div>
             <motion.div
@@ -222,8 +214,8 @@ function Home() {
               transition={{ delay: 0.4 }}
               className="flex flex-col items-center"
             >
-              <FaDollarSign className="text-5xl text-[rgb(39,106,67)] mb-4" />
-              <p className="text-5xl font-semibold text-[rgb(34,56,41)]">$50K+</p>
+              <FaDollarSign className="text-5xl text-kiva-action-green mb-4" />
+              <p className="text-5xl font-semibold text-kiva-dark-green">$50K+</p>
               <p className="text-lg text-gray-600 mt-2">Lent Across Africa</p>
             </motion.div>
             <motion.div
@@ -234,8 +226,8 @@ function Home() {
               transition={{ delay: 0.6 }}
               className="flex flex-col items-center"
             >
-              <FaChartLine className="text-5xl text-[rgb(39,106,67)] mb-4" />
-              <p className="text-5xl font-semibold text-[rgb(34,56,41)]">95%</p>
+              <FaChartLine className="text-5xl text-kiva-action-green mb-4" />
+              <p className="text-5xl font-semibold text-kiva-dark-green">95%</p>
               <p className="text-lg text-gray-600 mt-2">Repayment Rate</p>
             </motion.div>
           </div>
@@ -243,14 +235,14 @@ function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 bg-[rgb(237,244,241)]">
+      <section className="py-16 bg-kiva-light-gray">
         <div className="container mx-auto px-4">
           <motion.h2
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-3xl md:text-4xl font-semibold text-center mb-12 text-[rgb(34,56,41)]"
+            className="text-3xl md:text-4xl font-semibold text-center mb-12 text-kiva-dark-green"
           >
             What Our Lenders Say
           </motion.h2>
@@ -270,7 +262,7 @@ function Home() {
                   className="w-12 h-12 rounded-full mr-4"
                 />
                 <div>
-                  <p className="text-lg font-semibold text-[rgb(34,56,41)]">Jane D.</p>
+                  <p className="text-lg font-semibold text-kiva-dark-green">Jane D.</p>
                   <p className="text-sm text-gray-600">USA</p>
                 </div>
               </div>
@@ -293,7 +285,7 @@ function Home() {
                   className="w-12 h-12 rounded-full mr-4"
                 />
                 <div>
-                  <p className="text-lg font-semibold text-[rgb(34,56,41)]">Mark T.</p>
+                  <p className="text-lg font-semibold text-kiva-dark-green">Mark T.</p>
                   <p className="text-sm text-gray-600">Canada</p>
                 </div>
               </div>
@@ -306,7 +298,7 @@ function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[rgb(34,56,41)] text-white py-12">
+      <footer className="bg-kiva-dark-green text-white py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center md:text-left">
@@ -318,22 +310,22 @@ function Home() {
             <div className="text-center">
               <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
               <div className="space-y-2">
-                <Link to="/about" className="block hover:text-[rgb(39,106,67)] transition">About Us</Link>
-                <Link to="/contact" className="block hover:text-[rgb(39,106,67)] transition">Contact</Link>
-                <Link to="/terms" className="block hover:text-[rgb(39,106,67)] transition">Terms</Link>
-                <Link to="/auth" className="block hover:text-[rgb(39,106,67)] transition">Sign In</Link>
+                <Link to="/about" className="block hover:text-kiva-action-green transition">About Us</Link>
+                <Link to="/contact" className="block hover:text-kiva-action-green transition">Contact</Link>
+                <Link to="/terms" className="block hover:text-kiva-action-green transition">Terms</Link>
+                <Link to="/auth" className="block hover:text-kiva-action-green transition">Sign In</Link>
               </div>
             </div>
             <div className="text-center md:text-right">
               <h3 className="text-xl font-semibold mb-4">Stay Connected</h3>
               <div className="flex justify-center md:justify-end space-x-4 mb-4">
-                <a href="#" className="text-gray-300 hover:text-[rgb(39,106,67)] transition">
+                <a href="#" className="text-gray-300 hover:text-kiva-action-green transition">
                   <FaTwitter size={24} />
                 </a>
-                <a href="#" className="text-gray-300 hover:text-[rgb(39,106,67)] transition">
+                <a href="#" className="text-gray-300 hover:text-kiva-action-green transition">
                   <FaFacebook size={24} />
                 </a>
-                <a href="#" className="text-gray-300 hover:text-[rgb(39,106,67)] transition">
+                <a href="#" className="text-gray-300 hover:text-kiva-action-green transition">
                   <FaInstagram size={24} />
                 </a>
               </div>
@@ -343,7 +335,7 @@ function Home() {
                   placeholder="Subscribe to our newsletter"
                   className="p-2 rounded-l-lg border-none focus:outline-none text-gray-800"
                 />
-                <button className="bg-[rgb(39,106,67)] text-white py-2 px-4 rounded-r-lg hover:bg-[rgb(34,56,41)] transition">
+                <button className="bg-kiva-action-green text-white py-2 px-4 rounded-r-lg hover:bg-kiva-dark-green transition">
                   <FaEnvelope />
                 </button>
               </div>
