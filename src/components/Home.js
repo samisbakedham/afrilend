@@ -9,15 +9,30 @@ function Home() {
 
   useEffect(() => {
     const fetchFeaturedLoans = async () => {
-      const { data, error } = await supabase
-        .from('loans')
-        .select('*')
-        .eq('status', 'open')
-        .limit(3);
-      if (error) {
-        console.error('Error fetching featured loans:', error.message);
-      } else {
-        setFeaturedLoans(data);
+      try {
+        const { data, error } = await supabase
+          .from('loans')
+          .select('*')
+          .eq('status', 'open')
+          .limit(3);
+        if (error) {
+          console.error('Error fetching featured loans:', error.message);
+          // Fallback to dummy data if Supabase fails
+          setFeaturedLoans([
+            { id: 1, name: 'Amina', country: 'Kenya', amount: 300, purpose: 'Expand her shop', funded_amount: 0 },
+            { id: 2, name: 'Fatima', country: 'Nigeria', amount: 400, purpose: 'Start a bakery', funded_amount: 0 },
+            { id: 3, name: 'Joseph', country: 'Uganda', amount: 600, purpose: 'Expand his carpentry business', funded_amount: 0 },
+          ]);
+        } else {
+          setFeaturedLoans(data || []);
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching loans:', err.message);
+        setFeaturedLoans([
+          { id: 1, name: 'Amina', country: 'Kenya', amount: 300, purpose: 'Expand her shop', funded_amount: 0 },
+          { id: 2, name: 'Fatima', country: 'Nigeria', amount: 400, purpose: 'Start a bakery', funded_amount: 0 },
+          { id: 3, name: 'Joseph', country: 'Uganda', amount: 600, purpose: 'Expand his carpentry business', funded_amount: 0 },
+        ]);
       }
     };
     fetchFeaturedLoans();
@@ -37,8 +52,7 @@ function Home() {
   return (
     <div className="font-sans text-gray-800" style={{ fontFamily: 'Roboto, sans-serif' }}>
       {/* Hero Section */}
-      <section className="relative bg-[rgb(34,56,41)] text-white py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560493676-04071e52ba2b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')] bg-cover bg-center opacity-50"></div>
+      <section className="relative bg-[rgb(34,56,41)] text-white py-24">
         <div className="container mx-auto text-center relative z-10 px-4">
           <motion.h1
             initial="hidden"
@@ -65,7 +79,7 @@ function Home() {
           >
             <Link
               to="/loans"
-              className="inline-block bg-[rgb(237,244,241)] text-[rgb(34,56,41)] font-medium py-3 px-8 rounded-lg shadow-md hover:bg-[rgb(39,106,67)] hover:text-white transition duration-300"
+              className="inline-block bg-[rgb(39,106,67)] text-white font-medium py-3 px-8 rounded-lg shadow-md hover:bg-[rgb(34,56,41)] transition duration-300"
             >
               Start Lending Now
             </Link>
@@ -85,35 +99,20 @@ function Home() {
           >
             About CandleLend
           </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeIn}
-              transition={{ delay: 0.2 }}
-            >
-              <img
-                src="https://images.unsplash.com/photo-1560493676-04071e52ba2b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                alt="African entrepreneur"
-                className="w-full h-64 object-cover rounded-lg shadow-md"
-                onError={(e) => { e.target.src = 'https://via.placeholder.com/600x400.jpg?text=Entrepreneur'; }}
-              />
-            </motion.div>
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-lg text-gray-700 mb-6">
+              Founded in 2023, CandleLend empowers African entrepreneurs with accessible microloans. We partner with local communities to support hardworking individuals with viable business ideas.
+            </p>
+            <p className="text-lg text-gray-700 mb-6">
+              Our mission is to foster economic growth and reduce poverty with a 95% repayment rate, ensuring your investment is impactful and secure.
+            </p>
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeIn}
               transition={{ delay: 0.4 }}
-              className="text-left"
             >
-              <p className="text-lg text-gray-700 mb-6">
-                Founded in 2023, CandleLend empowers African entrepreneurs with accessible microloans. We partner with local communities to support hardworking individuals with viable business ideas.
-              </p>
-              <p className="text-lg text-gray-700 mb-6">
-                Our mission is to foster economic growth and reduce poverty with a 95% repayment rate, ensuring your investment is impactful and secure.
-              </p>
               <Link
                 to="/about"
                 className="inline-block bg-[rgb(39,106,67)] text-white py-2 px-6 rounded hover:bg-[rgb(34,56,41)] transition"
@@ -157,42 +156,17 @@ function Home() {
                   viewport={{ once: true }}
                   variants={fadeInUp}
                   transition={{ delay: 0.2 * (index + 1) }}
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300"
+                  className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300"
                 >
-                  {loan.image ? (
-                    <img
-                      src={loan.image}
-                      alt={loan.name}
-                      className="w-full h-48 object-cover"
-                      onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300.jpg?text=No+Image'; }}
-                    />
-                  ) : (
-                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                      <span className="text-gray-500">No Image Available</span>
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold text-[rgb(39,106,67)]">{loan.name} - {loan.country}</h3>
-                    <p className="text-gray-600 mt-2">Needs ${loan.amount} to {loan.purpose}</p>
-                    <p className="text-sm text-gray-500 mt-2 line-clamp-3">{loan.description}</p>
-                    <div className="mt-4">
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div
-                          className="bg-[rgb(39,106,67)] h-2.5 rounded-full"
-                          style={{ width: `${(loan.funded_amount || 0) / loan.amount * 100 || 0}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Funded: ${(loan.funded_amount || 0).toFixed(2)} / ${loan.amount}
-                      </p>
-                    </div>
-                    <Link
-                      to={`/loans/${loan.id}`}
-                      className="mt-4 inline-block bg-[rgb(39,106,67)] text-white py-2 px-4 rounded hover:bg-[rgb(34,56,41)] transition"
-                    >
-                      Support {loan.name}
-                    </Link>
-                  </div>
+                  <h3 className="text-xl font-semibold text-[rgb(39,106,67)]">{loan.name} - {loan.country}</h3>
+                  <p className="text-gray-600 mt-2">Needs ${loan.amount} to {loan.purpose}</p>
+                  <p className="text-sm text-gray-500 mt-2">Funded: ${loan.funded_amount || 0} / ${loan.amount}</p>
+                  <Link
+                    to={`/loans/${loan.id}`}
+                    className="mt-4 inline-block bg-[rgb(39,106,67)] text-white py-2 px-4 rounded hover:bg-[rgb(34,56,41)] transition"
+                  >
+                    Support {loan.name}
+                  </Link>
                 </motion.div>
               ))}
             </div>
