@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import { FaUsers, FaDollarSign, FaChartLine, FaTwitter, FaFacebook, FaInstagram, FaEnvelope } from 'react-icons/fa';
 import { motion } from 'framer-motion'; // For animations
-import heroImage from '../assets/hero-image.jpg'; // Placeholder, replace with your image
-import entrepreneurImage from '../assets/entrepreneur.jpg'; // Placeholder, replace with your image
 
 function Home() {
   const [featuredLoans, setFeaturedLoans] = useState([]);
@@ -37,16 +35,16 @@ function Home() {
   };
 
   return (
-    <div className="font-sans text-gray-800" style={{ fontFamily: 'PostGrotesk, sans-serif' }}>
+    <div className="font-sans text-gray-800" style={{ fontFamily: 'Roboto, sans-serif' }}>
       {/* Hero Section */}
-      <section className="relative bg-[rgb(34,56,41)] text-white py-24 overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/45-degree-fabric-light.png')]"></div>
+      <section className="relative bg-[rgb(34,56,41)] text-white py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560493676-04071e52ba2b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')] bg-cover bg-center opacity-50"></div>
         <div className="container mx-auto text-center relative z-10 px-4">
           <motion.h1
             initial="hidden"
             animate="visible"
             variants={fadeIn}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight mb-6"
           >
             Empower Africa’s Future
           </motion.h1>
@@ -57,7 +55,7 @@ function Home() {
             transition={{ delay: 0.2 }}
             className="text-lg md:text-xl mb-10 max-w-4xl mx-auto"
           >
-            CandleLend connects compassionate lenders with African entrepreneurs, offering microloans starting at $25. Choose your interest rate, support local growth, and create lasting impact.
+            CandleLend connects compassionate lenders with African entrepreneurs, offering microloans starting at $25. Support local growth and create lasting impact.
           </motion.p>
           <motion.div
             initial="hidden"
@@ -67,18 +65,11 @@ function Home() {
           >
             <Link
               to="/loans"
-              className="inline-block bg-[rgb(237,244,241)] text-[rgb(34,56,41)] font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-[rgb(39,106,67)] hover:text-white transition duration-300"
+              className="inline-block bg-[rgb(237,244,241)] text-[rgb(34,56,41)] font-medium py-3 px-8 rounded-lg shadow-md hover:bg-[rgb(39,106,67)] hover:text-white transition duration-300"
             >
               Start Lending Now
             </Link>
           </motion.div>
-          <div className="mt-10">
-            <img
-              src={heroImage}
-              alt="African entrepreneurs"
-              className="w-full max-w-4xl mx-auto rounded-lg shadow-lg object-cover h-64"
-            />
-          </div>
         </div>
       </section>
 
@@ -90,7 +81,7 @@ function Home() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-3xl md:text-4xl font-bold text-center mb-12 text-[rgb(34,56,41)]"
+            className="text-3xl md:text-4xl font-semibold text-center mb-12 text-[rgb(34,56,41)]"
           >
             About CandleLend
           </motion.h2>
@@ -103,9 +94,10 @@ function Home() {
               transition={{ delay: 0.2 }}
             >
               <img
-                src={entrepreneurImage}
+                src="https://images.unsplash.com/photo-1560493676-04071e52ba2b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
                 alt="African entrepreneur"
-                className="w-full h-72 object-cover rounded-lg shadow-md"
+                className="w-full h-64 object-cover rounded-lg shadow-md"
+                onError={(e) => { e.target.src = 'https://via.placeholder.com/600x400.jpg?text=Entrepreneur'; }}
               />
             </motion.div>
             <motion.div
@@ -117,7 +109,7 @@ function Home() {
               className="text-left"
             >
               <p className="text-lg text-gray-700 mb-6">
-                Founded in 2023, CandleLend empowers African entrepreneurs with accessible microloans. We partner with local communities to support hardworking individuals with viable business ideas, breaking down financial barriers.
+                Founded in 2023, CandleLend empowers African entrepreneurs with accessible microloans. We partner with local communities to support hardworking individuals with viable business ideas.
               </p>
               <p className="text-lg text-gray-700 mb-6">
                 Our mission is to foster economic growth and reduce poverty with a 95% repayment rate, ensuring your investment is impactful and secure.
@@ -141,7 +133,7 @@ function Home() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-3xl md:text-4xl font-bold text-center mb-12 text-[rgb(34,56,41)]"
+            className="text-3xl md:text-4xl font-semibold text-center mb-12 text-[rgb(34,56,41)]"
           >
             Meet the Entrepreneurs
           </motion.h2>
@@ -172,6 +164,7 @@ function Home() {
                       src={loan.image}
                       alt={loan.name}
                       className="w-full h-48 object-cover"
+                      onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300.jpg?text=No+Image'; }}
                     />
                   ) : (
                     <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
@@ -230,7 +223,7 @@ function Home() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-3xl md:text-4xl font-bold mb-12 text-[rgb(34,56,41)]"
+            className="text-3xl md:text-4xl font-semibold mb-12 text-[rgb(34,56,41)]"
           >
             Your Impact
           </motion.h2>
@@ -244,7 +237,7 @@ function Home() {
               className="flex flex-col items-center"
             >
               <FaUsers className="text-5xl text-[rgb(39,106,67)] mb-4" />
-              <p className="text-5xl font-bold text-[rgb(34,56,41)]">100+</p>
+              <p className="text-5xl font-semibold text-[rgb(34,56,41)]">100+</p>
               <p className="text-lg text-gray-600 mt-2">Entrepreneurs Funded</p>
             </motion.div>
             <motion.div
@@ -256,7 +249,7 @@ function Home() {
               className="flex flex-col items-center"
             >
               <FaDollarSign className="text-5xl text-[rgb(39,106,67)] mb-4" />
-              <p className="text-5xl font-bold text-[rgb(34,56,41)]">$50K+</p>
+              <p className="text-5xl font-semibold text-[rgb(34,56,41)]">$50K+</p>
               <p className="text-lg text-gray-600 mt-2">Lent Across Africa</p>
             </motion.div>
             <motion.div
@@ -268,7 +261,7 @@ function Home() {
               className="flex flex-col items-center"
             >
               <FaChartLine className="text-5xl text-[rgb(39,106,67)] mb-4" />
-              <p className="text-5xl font-bold text-[rgb(34,56,41)]">95%</p>
+              <p className="text-5xl font-semibold text-[rgb(34,56,41)]">95%</p>
               <p className="text-lg text-gray-600 mt-2">Repayment Rate</p>
             </motion.div>
           </div>
@@ -283,7 +276,7 @@ function Home() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-3xl md:text-4xl font-bold text-center mb-12 text-[rgb(34,56,41)]"
+            className="text-3xl md:text-4xl font-semibold text-center mb-12 text-[rgb(34,56,41)]"
           >
             What Our Lenders Say
           </motion.h2>
@@ -343,7 +336,7 @@ function Home() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center md:text-left">
-              <h3 className="text-2xl font-bold mb-4">CandleLend</h3>
+              <h3 className="text-2xl font-semibold mb-4">CandleLend</h3>
               <p className="text-gray-300">
                 Empowering African entrepreneurs through microloans. Join us in making a difference.
               </p>
