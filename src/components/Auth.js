@@ -9,7 +9,7 @@ function Auth() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(true); // Toggle between login and signup
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -24,13 +24,25 @@ function Auth() {
       }
 
       if (isLogin) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        // Login flow
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
         if (signInError) throw signInError;
         navigate('/profile');
       } else {
-        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+        // Signup flow
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
         if (signUpError) throw signUpError;
-        await supabase.from('profiles').insert({ id: data.user.id, name, role: 'lender' });
+        await supabase.from('profiles').insert({
+          id: data.user.id,
+          name,
+          role: 'lender',
+        });
         toast.success('Signup successful! Please check your email to verify your account.');
         navigate('/profile');
       }
@@ -43,18 +55,18 @@ function Auth() {
     }
   };
 
-  const handleOAuthLogin = async (provider) => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
         options: {
-          redirectTo: 'https://candle-labs.com/auth/callback',
+          redirectTo: 'https://candle-labs.com/profile',
         },
       });
       if (error) throw error;
     } catch (err) {
-      console.error('OAuth login error:', err.message);
+      console.error('Google login error:', err.message);
       setError(err.message || 'An unexpected error occurred.');
       toast.error(err.message || 'An unexpected error occurred.');
     } finally {
@@ -78,7 +90,7 @@ function Auth() {
         {error && <p className="text-red-600 text-center mb-4">{error}</p>}
         <div className="space-y-6">
           <button
-            onClick={() => handleOAuthLogin('google')}
+            onClick={handleGoogleLogin}
             className="w-full bg-white text-gray-900 py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-100 transition flex items-center justify-center space-x-2"
             disabled={loading}
           >
@@ -155,14 +167,14 @@ function Auth() {
               </div>
             )}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center">
                 <input
-                  id="not-robot"
+                  id="remember-me"
                   type="checkbox"
                   className="h-4 w-4 text-kiva-green focus:ring-kiva-green border-gray-300 rounded"
                 />
-                <label htmlFor="not-robot" className="text-sm text-gray-600">
-                  I’m not a robot
+                <label htmlFor="remember-me" className="ml-2 text-sm text-gray-600">
+                  Remember me
                 </label>
               </div>
               <a href="#" className="text-sm text-kiva-green hover:underline">
