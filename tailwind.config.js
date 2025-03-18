@@ -5,8 +5,8 @@ module.exports = {
       colors: {
         'kiva-dark-green': 'rgb(34,56,41)',
         'kiva-action-green': 'rgb(39,106,67)',
-        'kiva-light-gray': 'rgb(237,244,241)',
-        'kiva-white': 'rgb(255,255,255)',
+        'kiva-light-gray': 'rgb(109, 109, 109)',
+        'kiva-white': 'rgb(13, 69, 0)',
       },
       fontFamily: {
         heading: ['Poppins', 'sans-serif'],
