@@ -221,7 +221,7 @@ function Home() {
               className="flex flex-col items-center"
             >
               <FaUsers className="text-5xl mb-4" style={{ color: 'rgb(39,106,67)' }} />
-              <p className="text-5xl font-semibold" style={{ color: 'rgb(34,56,41)' }}>100+</p>
+              <p className="text-5xl font-semibold" style={{ color: 'rgb(34,56,41)' }}>10+</p>
               <p className="text-lg text-gray-600 mt-2">Entrepreneurs Funded</p>
             </motion.div>
             <motion.div
@@ -233,7 +233,7 @@ function Home() {
               className="flex flex-col items-center"
             >
               <FaDollarSign className="text-5xl mb-4" style={{ color: 'rgb(39,106,67)' }} />
-              <p className="text-5xl font-semibold" style={{ color: 'rgb(34,56,41)' }}>$50K+</p>
+              <p className="text-5xl font-semibold" style={{ color: 'rgb(34,56,41)' }}>5K+</p>
               <p className="text-lg text-gray-600 mt-2">Lent Across Africa</p>
             </motion.div>
             <motion.div
